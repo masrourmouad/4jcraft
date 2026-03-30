@@ -1,0 +1,8 @@
+<map id="CScene_HelpAndOptions" name="CScene_HelpAndOptions">
+<area shape="rect" id="Node000001" title=" " alt="" coords="46,93,229,119"/>
+<area shape="poly" id="edge2_Node000001_Node000001" title=" " alt="" coords="243,98,255,106,247,113,229,116,228,111,245,108,250,106,241,103"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,125,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="86,39,129,91,125,95,82,43"/>
+<area shape="rect" id="Node000003" href="$classD3DXVECTOR3.html" title=" " alt="" coords="149,5,269,31"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="193,43,149,95,145,91,189,39"/>
+</map>

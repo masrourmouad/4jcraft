@@ -1,0 +1,6 @@
+<map id="CScene_MultiGameInfo" name="CScene_MultiGameInfo">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,80,180,105"/>
+<area shape="poly" id="edge2_Node000001_Node000001" title=" " alt="" coords="195,85,207,93,198,99,181,102,180,96,197,94,201,93,193,90"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="33,5,153,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="95,45,95,80,90,80,90,45"/>
+</map>
