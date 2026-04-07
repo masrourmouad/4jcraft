@@ -282,8 +282,8 @@ void CreateWorldScreen::buttonClicked(Button* button) {
                               moreOptionsParams->bHostPrivileges);
 
         param->settings = app.GetGameHostOption(eGameHostOption_All);
-        param->xzSize = LEVEL_WIDTH_SMALL;
-        param->hellScale = HELL_LEVEL_SCALE_SMALL;
+        param->xzSize = LEVEL_MAX_WIDTH;
+        param->hellScale = HELL_LEVEL_MAX_SCALE;
 
         g_NetworkManager.HostGame(0, false, false, MINECRAFT_NET_MAX_PLAYERS,
                                   0);
