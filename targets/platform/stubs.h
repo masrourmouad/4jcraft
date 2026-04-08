@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 #ifdef __linux__
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -39,8 +40,6 @@ void glEndQueryARB(int);
 void glGetQueryObjectuARB(int, int, IntBuffer*);
 void glReadPixels(int, int, int, int, int, int, ByteBuffer*);
 
-void LinuxGLLogLightmapState(const char* stage, int textureId, bool scaleLight);
-void LinuxLogStubLightmapProbe();
 #else
 
 const int GL_BYTE = 0;
@@ -224,7 +223,7 @@ class ZipFile {
 public:
     ZipFile(File* file) {}
     InputStream* getInputStream(ZipEntry* entry) { return nullptr; }
-    ZipEntry* getEntry(const std::wstring& name) { return nullptr; }
+    ZipEntry* getEntry(const std::string& name) { return nullptr; }
     void close() {}
 };
 
@@ -238,7 +237,7 @@ public:
     static void create() {}
     static void destroy() {}
     static bool isKeyDown(int) { return false; }
-    static std::wstring getKeyName(int) { return L"KEYNAME"; }
+    static std::string getKeyName(int) { return "KEYNAME"; }
     static void enableRepeatEvents(bool) {}
     static const int KEY_A = 0;
     static const int KEY_B = 1;
@@ -289,7 +288,7 @@ public:
 class Display {
 public:
     static bool isActive() { return true; }
-    static void update();
+    static void update() {}
     static void swapBuffers();
     static void destroy() {}
 };
@@ -300,9 +299,4 @@ public:
     void start() {}
     void halt() {}
     void forceReload() {}
-};
-
-class Color {
-public:
-    static int HSBtoRGB(float, float, float) { return 0; }
 };

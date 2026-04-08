@@ -1,6 +1,6 @@
 #include "UIComponent_Logo.h"
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
 
@@ -11,21 +11,21 @@ UIComponent_Logo::UIComponent_Logo(int iPad, void* initData,
     initialiseMovie();
 }
 
-std::wstring UIComponent_Logo::getMoviePath() {
+std::string UIComponent_Logo::getMoviePath() {
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
-            return L"ComponentLogoSplit";
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            return "ComponentLogoSplit";
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
-            return L"ComponentLogo";
+            return "ComponentLogo";
             break;
     }
 }

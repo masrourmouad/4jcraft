@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "ClientConnection.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Console_Debug_enum.h"
@@ -56,7 +56,7 @@ MultiPlayerLevel::ResetInfo::ResetInfo(int x, int y, int z, int tile,
 MultiPlayerLevel::MultiPlayerLevel(ClientConnection* connection,
                                    LevelSettings* levelSettings, int dimension,
                                    int difficulty)
-    : Level(std::make_shared<MockedLevelStorage>(), L"MpServer",
+    : Level(std::make_shared<MockedLevelStorage>(), "MpServer",
             Dimension::getNew(dimension), levelSettings, false) {
     minecraft = Minecraft::GetInstance();
 
@@ -123,7 +123,7 @@ void MultiPlayerLevel::tick() {
 #if !defined(_FINAL_BUILD)
         bool freezeTime =
             gameServices().debugSettingsOn() &&
-            gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+            gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
                 (1L << eDebugSetting_FreezeTime);
         if (!freezeTime)
 #endif
@@ -808,11 +808,11 @@ void MultiPlayerLevel::setDayTime(int64_t newTime) {
     /*if (newTime < 0)
     {
             newTime = -newTime;
-            getGameRules()->set(GameRules::RULE_DAYLIGHT, L"false");
+            getGameRules()->set(GameRules::RULE_DAYLIGHT, "false");
     }
     else
     {
-            getGameRules()->set(GameRules::RULE_DAYLIGHT, L"true");
+            getGameRules()->set(GameRules::RULE_DAYLIGHT, "true");
     }*/
 
     Level::setDayTime(newTime);

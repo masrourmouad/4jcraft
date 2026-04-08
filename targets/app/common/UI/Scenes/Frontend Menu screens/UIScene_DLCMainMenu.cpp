@@ -1,7 +1,6 @@
 
 #include "UIScene_DLCMainMenu.h"
 
-#include "platform/InputActions.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
@@ -28,7 +27,7 @@ UIScene_DLCMainMenu::UIScene_DLCMainMenu(int iPad, void* initData,
     m_buttonListOffers.init(eControl_OffersList);
 
     if (m_loadedResolution == eSceneResolution_1080) {
-        m_labelXboxStore.init(L"");
+        m_labelXboxStore.init("");
     }
 }
 
@@ -38,7 +37,7 @@ UIScene_DLCMainMenu::~UIScene_DLCMainMenu() {
     app.SetLiveLinkRequired(false);
 }
 
-std::wstring UIScene_DLCMainMenu::getMoviePath() { return L"DLCMainMenu"; }
+std::string UIScene_DLCMainMenu::getMoviePath() { return "DLCMainMenu"; }
 
 void UIScene_DLCMainMenu::updateTooltips() {
     ui.SetTooltips(m_iPad, IDS_TOOLTIPS_SELECT, IDS_TOOLTIPS_BACK);
@@ -95,7 +94,7 @@ void UIScene_DLCMainMenu::handlePress(F64 controlId, F64 childId) {
 void UIScene_DLCMainMenu::handleTimerComplete(int id) {}
 
 int UIScene_DLCMainMenu::ExitDLCMainMenu(void* pParam, int iPad,
-                                         C4JStorage::EMessageResult result) {
+                                         IPlatformStorage::EMessageResult result) {
     UIScene_DLCMainMenu* pClass = (UIScene_DLCMainMenu*)pParam;
 
     pClass->navigateBack();

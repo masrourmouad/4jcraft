@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
@@ -60,8 +60,8 @@ private:
 
     float m_fScreenWidth, m_fScreenHeight;
     float m_fRawWidth, m_fRawHeight;
-    std::vector<std::wstring> m_splashes;
-    std::wstring m_splash;
+    std::vector<std::string> m_splashes;
+    std::string m_splash;
     enum eSplashIndexes {
         eSplashHappyBirthdayEx = 0,
         eSplashHappyBirthdayNotch,
@@ -109,7 +109,7 @@ public:
 protected:
     void customDrawSplash(IggyCustomDrawCallbackRegion* region);
 
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
 public:
     virtual void tick();
@@ -145,14 +145,14 @@ private:
     static int Achievements_SignInReturned(void* pParam, bool bContinue,
                                            int iPad);
     static int MustSignInReturned(void* pParam, int iPad,
-                                  C4JStorage::EMessageResult result);
+                                  IPlatformStorage::EMessageResult result);
 
     static int Leaderboards_SignInReturned(void* pParam, bool bContinue,
                                            int iPad);
     static int UnlockFullGame_SignInReturned(void* pParam, bool bContinue,
                                              int iPad);
     static int ExitGameReturned(void* pParam, int iPad,
-                                C4JStorage::EMessageResult result);
+                                IPlatformStorage::EMessageResult result);
     bool m_bRunGameChosen;
     int32_t m_errorCode;
     bool m_bErrorDialogRunning;

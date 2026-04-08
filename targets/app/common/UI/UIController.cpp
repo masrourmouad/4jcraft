@@ -10,8 +10,8 @@
 #include <memory>
 #include <utility>
 
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
@@ -245,7 +245,7 @@ UIController::UIController() {
 
     m_iPressStartQuadrantsMask = 0;
 
-    m_currentRenderViewport = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+    m_currentRenderViewport = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
     m_bCustomRenderPosition = false;
     m_winUserIndex = 0;
     m_accumulatedTicks = 0;
@@ -387,7 +387,7 @@ void UIController::SetupFont() {
     if (m_eTargetFont == m_eCurrentFont) {
         // 4J-JEV: If we're ingame, reload the font to update all the text.
         if (app.GetGameStarted())
-            app.SetAction(ProfileManager.GetPrimaryPad(),
+            app.SetAction(PlatformProfile.GetPrimaryPad(),
                           eAppAction_ReloadFont);
         return;
     }
@@ -434,7 +434,7 @@ void UIController::SetupFont() {
 
     // Reload ui to set new font.
     if (m_eCurrentFont != eFont_NotLoaded) {
-        app.SetAction(ProfileManager.GetPrimaryPad(), eAppAction_ReloadFont);
+        app.SetAction(PlatformProfile.GetPrimaryPad(), eAppAction_ReloadFont);
     } else {
         updateCurrentFont();
     }
@@ -459,7 +459,7 @@ void UIController::tick() {
         ui.CleanUpSkinReload();
 
         if (m_navigateToHomeOnReload || !g_NetworkManager.IsInSession()) {
-            ui.NavigateToScene(ProfileManager.GetPrimaryPad(),
+            ui.NavigateToScene(PlatformProfile.GetPrimaryPad(),
                                eUIScene_MainMenu);
         } else {
             ui.CloseAllPlayersScenes();
@@ -500,22 +500,22 @@ void UIController::tick() {
 }
 
 void UIController::loadSkins() {
-    std::wstring platformSkinPath = L"";
+    std::string platformSkinPath = "";
 
 #if defined(_WINDOWS64) || defined(__linux__)
     if (m_fScreenHeight == 1080.0f) {
-        platformSkinPath = L"skinHDWin.swf";
+        platformSkinPath = "skinHDWin.swf";
     } else {
-        platformSkinPath = L"skinWin.swf";
+        platformSkinPath = "skinWin.swf";
     }
 #endif
     // Every platform has one of these, so nothing shared
     if (m_fScreenHeight == 1080.0f) {
         m_iggyLibraries[eLibrary_Platform] =
-            loadSkin(platformSkinPath, L"platformskinHD.swf");
+            loadSkin(platformSkinPath, "platformskinHD.swf");
     } else {
         m_iggyLibraries[eLibrary_Platform] =
-            loadSkin(platformSkinPath, L"platformskin.swf");
+            loadSkin(platformSkinPath, "platformskin.swf");
     }
 
 #if defined(_WINDOWS64) || defined(__linux__)
@@ -525,59 +525,61 @@ void UIController::loadSkins() {
     // during development
 #if !defined(_FINAL_BUILD)
     m_iggyLibraries[eLibraryFallback_GraphicsDefault] =
-        loadSkin(L"skinGraphics.swf", L"skinGraphics.swf");
+        loadSkin("skinGraphics.swf", "skinGraphics.swf");
     m_iggyLibraries[eLibraryFallback_GraphicsHUD] =
-        loadSkin(L"skinGraphicsHud.swf", L"skinGraphicsHud.swf");
+        loadSkin("skinGraphicsHud.swf", "skinGraphicsHud.swf");
     m_iggyLibraries[eLibraryFallback_GraphicsInGame] =
-        loadSkin(L"skinGraphicsInGame.swf", L"skinGraphicsInGame.swf");
+        loadSkin("skinGraphicsInGame.swf", "skinGraphicsInGame.swf");
     m_iggyLibraries[eLibraryFallback_GraphicsTooltips] =
-        loadSkin(L"skinGraphicsTooltips.swf", L"skinGraphicsTooltips.swf");
+        loadSkin("skinGraphicsTooltips.swf", "skinGraphicsTooltips.swf");
     m_iggyLibraries[eLibraryFallback_GraphicsLabels] =
-        loadSkin(L"skinGraphicsLabels.swf", L"skinGraphicsLabels.swf");
+        loadSkin("skinGraphicsLabels.swf", "skinGraphicsLabels.swf");
     m_iggyLibraries[eLibraryFallback_Labels] =
-        loadSkin(L"skinLabels.swf", L"skinLabels.swf");
+        loadSkin("skinLabels.swf", "skinLabels.swf");
     m_iggyLibraries[eLibraryFallback_InGame] =
-        loadSkin(L"skinInGame.swf", L"skinInGame.swf");
+        loadSkin("skinInGame.swf", "skinInGame.swf");
     m_iggyLibraries[eLibraryFallback_HUD] =
-        loadSkin(L"skinHud.swf", L"skinHud.swf");
+        loadSkin("skinHud.swf", "skinHud.swf");
     m_iggyLibraries[eLibraryFallback_Tooltips] =
-        loadSkin(L"skinTooltips.swf", L"skinTooltips.swf");
+        loadSkin("skinTooltips.swf", "skinTooltips.swf");
     m_iggyLibraries[eLibraryFallback_Default] =
-        loadSkin(L"skin.swf", L"skin.swf");
+        loadSkin("skin.swf", "skin.swf");
 #endif
 #endif
 
     m_iggyLibraries[eLibrary_GraphicsDefault] =
-        loadSkin(L"skinHDGraphics.swf", L"skinHDGraphics.swf");
+        loadSkin("skinHDGraphics.swf", "skinHDGraphics.swf");
     m_iggyLibraries[eLibrary_GraphicsHUD] =
-        loadSkin(L"skinHDGraphicsHud.swf", L"skinHDGraphicsHud.swf");
+        loadSkin("skinHDGraphicsHud.swf", "skinHDGraphicsHud.swf");
     m_iggyLibraries[eLibrary_GraphicsInGame] =
-        loadSkin(L"skinHDGraphicsInGame.swf", L"skinHDGraphicsInGame.swf");
+        loadSkin("skinHDGraphicsInGame.swf", "skinHDGraphicsInGame.swf");
     m_iggyLibraries[eLibrary_GraphicsTooltips] =
-        loadSkin(L"skinHDGraphicsTooltips.swf", L"skinHDGraphicsTooltips.swf");
+        loadSkin("skinHDGraphicsTooltips.swf", "skinHDGraphicsTooltips.swf");
     m_iggyLibraries[eLibrary_GraphicsLabels] =
-        loadSkin(L"skinHDGraphicsLabels.swf", L"skinHDGraphicsLabels.swf");
+        loadSkin("skinHDGraphicsLabels.swf", "skinHDGraphicsLabels.swf");
     m_iggyLibraries[eLibrary_Labels] =
-        loadSkin(L"skinHDLabels.swf", L"skinHDLabels.swf");
+        loadSkin("skinHDLabels.swf", "skinHDLabels.swf");
     m_iggyLibraries[eLibrary_InGame] =
-        loadSkin(L"skinHDInGame.swf", L"skinHDInGame.swf");
+        loadSkin("skinHDInGame.swf", "skinHDInGame.swf");
     m_iggyLibraries[eLibrary_HUD] =
-        loadSkin(L"skinHDHud.swf", L"skinHDHud.swf");
+        loadSkin("skinHDHud.swf", "skinHDHud.swf");
     m_iggyLibraries[eLibrary_Tooltips] =
-        loadSkin(L"skinHDTooltips.swf", L"skinHDTooltips.swf");
-    m_iggyLibraries[eLibrary_Default] = loadSkin(L"skinHD.swf", L"skinHD.swf");
+        loadSkin("skinHDTooltips.swf", "skinHDTooltips.swf");
+    m_iggyLibraries[eLibrary_Default] = loadSkin("skinHD.swf", "skinHD.swf");
 #endif
 }
 
-IggyLibrary UIController::loadSkin(const std::wstring& skinPath,
-                                   const std::wstring& skinName) {
+IggyLibrary UIController::loadSkin(const std::string& skinPath,
+                                   const std::string& skinName) {
     IggyLibrary lib = IGGY_INVALID_LIBRARY;
     // 4J Stu - We need to load the platformskin before the normal skin, as the
     // normal skin requires some elements from the platform skin
     if (!skinPath.empty() && app.hasArchiveFile(skinPath)) {
         std::vector<uint8_t> baFile = app.getArchiveFile(skinPath);
-        const std::u16string convSkinName = wstring_to_u16string(skinName);
 
+        const std::u16string convSkinName = string_to_u16string(skinName);
+
+        // 4jcraft: shiggy has no IggyLibraryCreateFromMemory unfortunately
         lib = IggyLibraryCreateFromMemoryUTF16(
             convSkinName.data(), (void*)baFile.data(), baFile.size(), nullptr);
 
@@ -590,14 +592,14 @@ IggyLibrary UIController::loadSkin(const std::wstring& skinPath,
                                                 &memoryInfo))) {
             totalStatic += memoryInfo.static_allocation_bytes;
             app.DebugPrintf(
-                app.USER_SR, "%ls - %.*s, static: %dB, dynamic: %dB\n",
+                app.USER_SR, "%s - %.*s, static: %dB, dynamic: %dB\n",
                 skinPath.c_str(), memoryInfo.subcategory_stringlen,
                 memoryInfo.subcategory, memoryInfo.static_allocation_bytes,
                 memoryInfo.dynamic_allocation_bytes);
             ++iteration;
         }
 
-        app.DebugPrintf(app.USER_SR, "%ls - Total static: %dB (%dKB)\n",
+        app.DebugPrintf(app.USER_SR, "%s - Total static: %dB (%dKB)\n",
                         skinPath.c_str(), totalStatic, totalStatic / 1024);
 #endif
     }
@@ -697,7 +699,7 @@ void UIController::CleanUpSkinReload() {
     if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
         if (!Minecraft::GetInstance()->skins->getSelected()->hasAudio()) {
             const unsigned int result =
-                StorageManager.UnmountInstalledDLC("TPACK");
+                PlatformStorage.UnmountInstalledDLC("TPACK");
         }
     }
 
@@ -713,7 +715,7 @@ void UIController::CleanUpSkinReload() {
     m_queuedMessageBoxData.clear();
 }
 
-std::vector<uint8_t> UIController::getMovieData(const std::wstring& filename) {
+std::vector<uint8_t> UIController::getMovieData(const std::string& filename) {
     // Cache everything we load in the current tick
     int64_t targetTime = System::currentTimeMillis() + (1000LL * 60);
     auto it = m_cachedMovieData.find(filename);
@@ -737,7 +739,7 @@ void UIController::tickInput() {
     if (!m_bSystemUIShowing) {
 #if defined(ENABLE_IGGY_PERFMON)
         if (m_iggyPerfmonEnabled) {
-            if (InputManager.ButtonPressed(ProfileManager.GetPrimaryPad(),
+            if (PlatformInput.ButtonPressed(PlatformProfile.GetPrimaryPad(),
                                            ACTION_MENU_STICK_PRESS))
                 m_iggyPerfmonEnabled = !m_iggyPerfmonEnabled;
         } else
@@ -765,9 +767,9 @@ void UIController::handleKeyPress(unsigned int iPad, unsigned int key) {
     bool released = false;  // Toggle
     bool repeat = false;
 
-    down = InputManager.ButtonDown(iPad, key);
-    pressed = InputManager.ButtonPressed(iPad, key);    // Toggle
-    released = InputManager.ButtonReleased(iPad, key);  // Toggle
+    down = PlatformInput.ButtonDown(iPad, key);
+    pressed = PlatformInput.ButtonPressed(iPad, key);    // Toggle
+    released = PlatformInput.ButtonReleased(iPad, key);  // Toggle
 
     if (pressed) app.DebugPrintf("Pressed %d\n", key);
     if (released) app.DebugPrintf("Released %d\n", key);
@@ -847,30 +849,30 @@ void UIController::renderScenes() {
         IggyPerfmonPad pm_pad;
 
         pm_pad.bits = 0;
-        pm_pad.field.dpad_up = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_UP);
-        pm_pad.field.dpad_down = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_DOWN);
-        pm_pad.field.dpad_left = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_LEFT);
-        pm_pad.field.dpad_right = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_RIGHT);
-        pm_pad.field.button_up = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_Y);
-        pm_pad.field.button_down = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_A);
-        pm_pad.field.button_left = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_X);
-        pm_pad.field.button_right = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_B);
-        pm_pad.field.shoulder_left_hi = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_LEFT_SCROLL);
-        pm_pad.field.shoulder_right_hi = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_RIGHT_SCROLL);
-        pm_pad.field.trigger_left_low = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_PAGEUP);
-        pm_pad.field.trigger_right_low = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_PAGEDOWN);
+        pm_pad.field.dpad_up = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_UP);
+        pm_pad.field.dpad_down = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_DOWN);
+        pm_pad.field.dpad_left = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_LEFT);
+        pm_pad.field.dpad_right = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_RIGHT);
+        pm_pad.field.button_up = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_Y);
+        pm_pad.field.button_down = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_A);
+        pm_pad.field.button_left = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_X);
+        pm_pad.field.button_right = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_B);
+        pm_pad.field.shoulder_left_hi = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_LEFT_SCROLL);
+        pm_pad.field.shoulder_right_hi = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_RIGHT_SCROLL);
+        pm_pad.field.trigger_left_low = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_PAGEUP);
+        pm_pad.field.trigger_right_low = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_PAGEDOWN);
         // IggyPerfmonPadFromXInputStatePointer(pm_pad, &xi_pad);
 
         // gdraw_D3D_SetTileOrigin( fb,
@@ -885,27 +887,27 @@ void UIController::renderScenes() {
 #endif
 }
 
-void UIController::getRenderDimensions(C4JRender::eViewportType viewport,
+void UIController::getRenderDimensions(IPlatformRenderer::eViewportType viewport,
                                        S32& width, S32& height) {
     switch (viewport) {
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
             width = (S32)(getScreenWidth());
             height = (S32)(getScreenHeight());
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
@@ -914,36 +916,36 @@ void UIController::getRenderDimensions(C4JRender::eViewportType viewport,
     }
 }
 
-void UIController::setupRenderPosition(C4JRender::eViewportType viewport) {
+void UIController::setupRenderPosition(IPlatformRenderer::eViewportType viewport) {
     if (m_bCustomRenderPosition || m_currentRenderViewport != viewport) {
         m_currentRenderViewport = viewport;
         m_bCustomRenderPosition = false;
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
                 xPos = (S32)(getScreenWidth() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 xPos = (S32)(getScreenWidth() / 4);
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
                 yPos = (S32)(getScreenHeight() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 yPos = (S32)(getScreenHeight() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
@@ -971,18 +973,18 @@ void UIController::setupCustomDrawGameState() {
     m_customRenderingClearRect.bottom = LONG_MIN;
 
 #if defined(_WINDOWS64)
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
 
     gdraw_D3D11_setViewport_4J();
 #elif defined(__linux__)
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
 #endif
-    RenderManager.Set_matrixDirty();
+    PlatformRenderer.Set_matrixDirty();
 
     // 4J Stu - We don't need to clear this here as iggy hasn't written anything
     // to the depth buffer. We DO however clear after we render which is why we
     // still setup the rectangle here
-    // RenderManager.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
+    // PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
     // glClear(GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -1061,9 +1063,9 @@ void UIController::setupCustomDrawGameStateAndMatrices(
 
 void UIController::endCustomDrawGameState() {
 #if defined(__linux__)
-    RenderManager.Clear(GL_DEPTH_BUFFER_BIT);
+    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT);
 #else
-    RenderManager.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
+    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
 #endif
     // glClear(GL_DEPTH_BUFFER_BIT);
     glDepthMask(false);
@@ -1116,17 +1118,17 @@ GDrawTexture* RADLINK UIController::TextureSubstitutionCreateCallback(
     void* user_callback_data, IggyUTF16* texture_name, S32* width, S32* height,
     void** destroy_callback_data) {
     UIController* uiController = (UIController*)user_callback_data;
-    auto it = uiController->m_substitutionTextures.find((wchar_t*)texture_name);
+    auto it = uiController->m_substitutionTextures.find((char*)texture_name);
 
     if (it != uiController->m_substitutionTextures.end()) {
-        app.DebugPrintf("Found substitution texture %ls, with %d bytes\n",
-                        (wchar_t*)texture_name, it->second.size());
+        app.DebugPrintf("Found substitution texture %s, with %d bytes\n",
+                        (char*)texture_name, it->second.size());
 
         BufferedImage image(it->second.data(), it->second.size());
         if (image.getData() != nullptr) {
             image.preMultiplyAlpha();
             Textures* t = Minecraft::GetInstance()->textures;
-            int id = t->getTexture(&image, C4JRender::TEXTURE_FORMAT_RxGyBzAw,
+            int id = t->getTexture(&image, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw,
                                    false);
 
             // 4J Stu - All our flash controls that allow replacing textures use
@@ -1137,16 +1139,16 @@ GDrawTexture* RADLINK UIController::TextureSubstitutionCreateCallback(
 
             *destroy_callback_data = (void*)(intptr_t)id;
 
-            app.DebugPrintf("Found substitution texture %ls (%d) - %dx%d\n",
-                            (wchar_t*)texture_name, id, image.getWidth(),
+            app.DebugPrintf("Found substitution texture %s (%d) - %dx%d\n",
+                            (char*)texture_name, id, image.getWidth(),
                             image.getHeight());
             return ui.getSubstitutionTexture(id);
         } else {
             return nullptr;
         }
     } else {
-        app.DebugPrintf("Could not find substitution texture %ls\n",
-                        (wchar_t*)texture_name);
+        app.DebugPrintf("Could not find substitution texture %s\n",
+                        (char*)texture_name);
         return nullptr;
     }
 }
@@ -1167,7 +1169,7 @@ void RADLINK UIController::TextureSubstitutionDestroyCallback(
     t->releaseTexture(id);
 }
 
-void UIController::registerSubstitutionTexture(const std::wstring& textureName,
+void UIController::registerSubstitutionTexture(const std::string& textureName,
                                                std::uint8_t* pbData,
                                                unsigned int dwLength) {
     // Remove it if it already exists
@@ -1178,7 +1180,7 @@ void UIController::registerSubstitutionTexture(const std::wstring& textureName,
 }
 
 void UIController::unregisterSubstitutionTexture(
-    const std::wstring& textureName, bool deleteData) {
+    const std::string& textureName, bool deleteData) {
     auto it = m_substitutionTextures.find(textureName);
 
     if (it != m_substitutionTextures.end()) {
@@ -1195,7 +1197,7 @@ bool UIController::NavigateToScene(int iPad, EUIScene scene, void* initData,
     // times
     if ((scene == eUIScene_LoadOrJoinMenu) &&
         (bSeenUpdateTextThisSession == false) &&
-        (app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+        (app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                              eGameSetting_DisplayUpdateMessage) != 0)) {
         scene = eUIScene_NewUpdateMessage;
         bSeenUpdateTextThisSession = true;
@@ -1358,7 +1360,7 @@ void UIController::NavigateToHomeMenu() {
         pMinecraft->soundEngine->SetStreamingSounds(
             eStream_Overworld_Calm1, eStream_Overworld_piano3, eStream_Nether1,
             eStream_Nether4, eStream_end_dragon, eStream_end_end, eStream_CD_1);
-        pMinecraft->soundEngine->playStreaming(L"", 0, 0, 0, 1, 1);
+        pMinecraft->soundEngine->playStreaming("", 0, 0, 0, 1, 1);
 
         // 		if(pDLCTexPack->m_pStreamedWaveBank!=nullptr)
         // 		{
@@ -1368,7 +1370,7 @@ void UIController::NavigateToHomeMenu() {
         // 		{
         // 			pDLCTexPack->m_pSoundBank->Destroy();
         // 		}
-        const unsigned int result = StorageManager.UnmountInstalledDLC("TPACK");
+        const unsigned int result = PlatformStorage.UnmountInstalledDLC("TPACK");
 
         app.DebugPrintf("Unmount result is %d\n", result);
     }
@@ -1378,7 +1380,7 @@ void UIController::NavigateToHomeMenu() {
     if (pMinecraft->skins->needsUIUpdate()) {
         m_navigateToHomeOnReload = true;
     } else {
-        ui.NavigateToScene(ProfileManager.GetPrimaryPad(), eUIScene_MainMenu);
+        ui.NavigateToScene(PlatformProfile.GetPrimaryPad(), eUIScene_MainMenu);
 #if defined(ENABLE_JAVA_GUIS)
         pMinecraft->setScreen(new TitleScreen());
 #endif
@@ -1482,7 +1484,7 @@ void UIController::CloseUIScenes(int iPad, bool forceIPad) {
 void UIController::setFullscreenMenuDisplayed(bool displayed) {
     // Show/hide the tooltips for the fullscreen group
     m_groups[(int)eUIGroup_Fullscreen]->showComponent(
-        ProfileManager.GetPrimaryPad(), eUIComponent_Tooltips,
+        PlatformProfile.GetPrimaryPad(), eUIComponent_Tooltips,
         eUILayer_Tooltips, displayed);
 
     // Show/hide tooltips for the other layers
@@ -1582,7 +1584,7 @@ void UIController::SetMenuDisplayed(int iPad, bool bVal) {
     if (bVal) {
         if (iPad == XUSER_INDEX_ANY) {
             for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-                InputManager.SetMenuDisplayed(i, true);
+                PlatformInput.SetMenuDisplayed(i, true);
                 m_bMenuDisplayed[i] = true;
                 // 4J Stu - Fix for #11018 - Functional: When the controller is
                 // unplugged during active gameplay and plugged back in at the
@@ -1590,7 +1592,7 @@ void UIController::SetMenuDisplayed(int iPad, bool bVal) {
                 m_bMenuToBeClosed[i] = false;
             }
         } else {
-            InputManager.SetMenuDisplayed(iPad, true);
+            PlatformInput.SetMenuDisplayed(iPad, true);
             m_bMenuDisplayed[iPad] = true;
             // 4J Stu - Fix for #11018 - Functional: When the controller is
             // unplugged during active gameplay and plugged back in at the
@@ -1618,7 +1620,7 @@ void UIController::CheckMenuDisplayed() {
             } else {
                 m_bMenuToBeClosed[iPad] = false;
                 m_bMenuDisplayed[iPad] = false;
-                InputManager.SetMenuDisplayed(iPad, false);
+                PlatformInput.SetMenuDisplayed(iPad, false);
             }
         }
     }
@@ -1777,7 +1779,7 @@ void UIController::PlayUISFX(ESoundEffect eSound) {
 
 void UIController::DisplayGamertag(unsigned int iPad, bool show) {
     // The host decides whether these are on or off
-    if (app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+    if (app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                             eGameSetting_DisplaySplitscreenGamertags) == 0) {
         show = false;
     }
@@ -1795,7 +1797,7 @@ void UIController::DisplayGamertag(unsigned int iPad, bool show) {
 }
 
 void UIController::SetSelectedItem(unsigned int iPad,
-                                   const std::wstring& name) {
+                                   const std::string& name) {
     EUIGroup group;
 
     if (app.GetGameStarted()) {
@@ -1951,13 +1953,13 @@ void UIController::UpdatePlayerBasePositions() {
     for (int idx = 0; idx < XUSER_MAX_COUNT; ++idx) {
         if (pMinecraft->localplayers[idx] != nullptr) {
             if (pMinecraft->localplayers[idx]->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+                IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
                 DisplayGamertag(idx, false);
             } else {
                 DisplayGamertag(idx, true);
             }
             m_groups[idx + 1]->SetViewportType(
-                (C4JRender::eViewportType)pMinecraft->localplayers[idx]
+                (IPlatformRenderer::eViewportType)pMinecraft->localplayers[idx]
                     ->m_iScreenSection);
         } else {
             // 4J Stu - This is a legacy thing from our XUI implementation that
@@ -1965,7 +1967,7 @@ void UIController::UpdatePlayerBasePositions() {
             // no longer exist is SLOW This should probably be on all platforms,
             // but I don't have time to test them all just now!
             m_groups[idx + 1]->SetViewportType(
-                C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
             DisplayGamertag(idx, false);
         }
     }
@@ -1997,7 +1999,7 @@ void UIController::SetTrialTimerLimitSecs(unsigned int uiSeconds) {
 }
 
 void UIController::UpdateTrialTimer(unsigned int iPad) {
-    wchar_t wcTime[20];
+    char wcTime[20];
 
     std::uint32_t timeTicks = (std::uint32_t)app.getTrialTimer();
 
@@ -2016,7 +2018,7 @@ void UIController::UpdateTrialTimer(unsigned int iPad) {
     {
         int iMins = timeTicks / 60;
         int iSeconds = timeTicks % 60;
-        swprintf(wcTime, 20, L"%d:%02d", iMins, iSeconds);
+        snprintf(wcTime, 20, "%d:%02d", iMins, iSeconds);
         if (m_groups[(int)eUIGroup_Fullscreen]->getPressStartToPlay())
             m_groups[(int)eUIGroup_Fullscreen]
                 ->getPressStartToPlay()
@@ -2025,7 +2027,7 @@ void UIController::UpdateTrialTimer(unsigned int iPad) {
         if (m_groups[(int)eUIGroup_Fullscreen]->getPressStartToPlay())
             m_groups[(int)eUIGroup_Fullscreen]
                 ->getPressStartToPlay()
-                ->setTrialTimer(L"");
+                ->setTrialTimer("");
     }
 
     // are we out of time?
@@ -2060,8 +2062,8 @@ void UIController::ShowAutosaveCountdownTimer(bool show) {
 }
 
 void UIController::UpdateAutosaveCountdownTimer(unsigned int uiSeconds) {
-    wchar_t wcAutosaveCountdown[100];
-    swprintf(wcAutosaveCountdown, 100, app.GetString(IDS_AUTOSAVE_COUNTDOWN),
+    char wcAutosaveCountdown[100];
+    snprintf(wcAutosaveCountdown, 100, app.GetString(IDS_AUTOSAVE_COUNTDOWN),
              uiSeconds);
     if (m_groups[(int)eUIGroup_Fullscreen]->getPressStartToPlay())
         m_groups[(int)eUIGroup_Fullscreen]
@@ -2070,14 +2072,14 @@ void UIController::UpdateAutosaveCountdownTimer(unsigned int uiSeconds) {
 }
 
 void UIController::ShowSavingMessage(unsigned int iPad,
-                                     C4JStorage::ESavingMessage eVal) {
+                                     IPlatformStorage::ESavingMessage eVal) {
     bool show = false;
     switch (eVal) {
-        case C4JStorage::ESavingMessage_None:
+        case IPlatformStorage::ESavingMessage_None:
             show = false;
             break;
-        case C4JStorage::ESavingMessage_Short:
-        case C4JStorage::ESavingMessage_Long:
+        case IPlatformStorage::ESavingMessage_Short:
+        case IPlatformStorage::ESavingMessage_Long:
             show = true;
             break;
     }
@@ -2154,29 +2156,29 @@ void UIController::HidePressStart() {
 
 void UIController::ClearPressStart() { m_iPressStartQuadrantsMask = 0; }
 
-C4JStorage::EMessageResult UIController::RequestAlertMessage(
+IPlatformStorage::EMessageResult UIController::RequestAlertMessage(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult), void* lpParam,
-    wchar_t* pwchFormatString) {
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
+    char* pwchFormatString) {
     return RequestMessageBox(uiTitle, uiText, uiOptionA, uiOptionC, dwPad, Func,
                              lpParam, pwchFormatString, 0, false);
 }
 
-C4JStorage::EMessageResult UIController::RequestErrorMessage(
+IPlatformStorage::EMessageResult UIController::RequestErrorMessage(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult), void* lpParam,
-    wchar_t* pwchFormatString) {
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
+    char* pwchFormatString) {
     return RequestMessageBox(uiTitle, uiText, uiOptionA, uiOptionC, dwPad, Func,
                              lpParam, pwchFormatString, 0, true);
 }
 
-C4JStorage::EMessageResult UIController::RequestMessageBox(
+IPlatformStorage::EMessageResult UIController::RequestMessageBox(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult), void* lpParam,
-    wchar_t* pwchFormatString, unsigned int dwFocusButton, bool bIsError)
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
+    char* pwchFormatString, unsigned int dwFocusButton, bool bIsError)
 
 {
     MessageBoxInfo param;
@@ -2214,15 +2216,15 @@ C4JStorage::EMessageResult UIController::RequestMessageBox(
         // This may happen if we had to queue the message box, or there was
         // already a message box displaying and so the NavigateToScene returned
         // false;
-        return C4JStorage::EMessage_Pending;
+        return IPlatformStorage::EMessage_Pending;
     } else {
-        return C4JStorage::EMessage_Busy;
+        return IPlatformStorage::EMessage_Busy;
     }
 }
 
-C4JStorage::EMessageResult UIController::RequestUGCMessageBox(
+IPlatformStorage::EMessageResult UIController::RequestUGCMessageBox(
     int title /* = -1 */, int message /* = -1 */, int iPad /* = -1*/,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult) /* = nullptr*/,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult) /* = nullptr*/,
     void* lpParam /* = nullptr*/) {
     // Default title / messages
     if (title == -1) {
@@ -2234,7 +2236,7 @@ C4JStorage::EMessageResult UIController::RequestUGCMessageBox(
     }
 
     // Default pad to primary player
-    if (iPad == -1) iPad = ProfileManager.GetPrimaryPad();
+    if (iPad == -1) iPad = PlatformProfile.GetPrimaryPad();
 
     unsigned int uiIDA[1];
     uiIDA[0] = IDS_CONFIRM_OK;
@@ -2242,9 +2244,9 @@ C4JStorage::EMessageResult UIController::RequestUGCMessageBox(
                                   lpParam);
 }
 
-C4JStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
+IPlatformStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
     int title /* = -1 */, int message /* = -1 */, int iPad /* = -1*/,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult) /* = nullptr*/,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult) /* = nullptr*/,
     void* lpParam /* = nullptr*/) {
     // Default title / messages
     if (title == -1) {
@@ -2261,7 +2263,7 @@ C4JStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
     }
 
     // Default pad to primary player
-    if (iPad == -1) iPad = ProfileManager.GetPrimaryPad();
+    if (iPad == -1) iPad = PlatformProfile.GetPrimaryPad();
 
     unsigned int uiIDA[1];
     uiIDA[0] = IDS_CONFIRM_OK;

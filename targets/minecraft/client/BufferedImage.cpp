@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/DLC/DLCFile.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
@@ -14,7 +14,7 @@
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "PlatformTypes.h"
 #include "util/StringHelpers.h"
-#include "platform/PlatformServices.h"
+#include "platform/fs/fs.h"
 
 BufferedImage::BufferedImage(int width, int height, int type) {
     data[0] = new int[width * height];
@@ -37,52 +37,52 @@ void BufferedImage::ByteFlip4(unsigned int& data) {
 // with a valid alpha channel.
 
 // 4jcraft: mostly rewrote this function
-BufferedImage::BufferedImage(const std::wstring& File,
+BufferedImage::BufferedImage(const std::string& File,
                              bool filenameHasExtension,
                              bool bTitleUpdateTexture,
-                             const std::wstring& drive) {
+                             const std::string& drive) {
     int32_t hr = -1;
-    std::wstring filePath = File;
+    std::string filePath = File;
 
     for (size_t i = 0; i < filePath.length(); ++i) {
-        if (filePath[i] == L'\\') filePath[i] = L'/';
+        if (filePath[i] == '\\') filePath[i] = '/';
     }
     for (int l = 0; l < 10; l++) data[l] = nullptr;
 
-    std::wstring baseName = filePath;
+    std::string baseName = filePath;
     if (!filenameHasExtension) {
         if (baseName.size() > 4 &&
-            baseName.substr(baseName.size() - 4) == L".png") {
+            baseName.substr(baseName.size() - 4) == ".png") {
             baseName = baseName.substr(0, baseName.size() - 4);
         }
     }
 
-    while (!baseName.empty() && (baseName[0] == L'/' || baseName[0] == L'\\'))
+    while (!baseName.empty() && (baseName[0] == '/' || baseName[0] == '\\'))
         baseName = baseName.substr(1);
-    if (baseName.find(L"res/") == 0) baseName = baseName.substr(4);
+    if (baseName.find("res/") == 0) baseName = baseName.substr(4);
 
-    std::wstring exeDir = PlatformFileIO.getBasePath().wstring();
+    std::string exeDir = PlatformFilesystem.getBasePath().string();
 
     for (int l = 0; l < 10; l++) {
-        std::wstring mipSuffix =
-            (l != 0) ? L"MipMapLevel" + toWString<int>(l + 1) : L"";
-        std::wstring fileName = baseName + mipSuffix + L".png";
-        std::wstring finalPath;
+        std::string mipSuffix =
+            (l != 0) ? "MipMapLevel" + toWString<int>(l + 1) : "";
+        std::string fileName = baseName + mipSuffix + ".png";
+        std::string finalPath;
         bool foundOnDisk = false;
 
-        std::vector<std::wstring> searchPaths = {
-            exeDir + L"/Common/res/TitleUpdate/res/" + fileName,
-            exeDir + L"/Common/res/" + fileName,
-            exeDir + L"/Common/Media/Graphics/" + fileName,
-            exeDir + L"/Common/Media/font/" + fileName,
-            exeDir + L"/Common/res/font/" + fileName,
-            exeDir + L"/Common/Media/" + fileName};
+        std::vector<std::string> searchPaths = {
+            exeDir + "/Common/res/TitleUpdate/res/" + fileName,
+            exeDir + "/Common/res/" + fileName,
+            exeDir + "/Common/Media/Graphics/" + fileName,
+            exeDir + "/Common/Media/font/" + fileName,
+            exeDir + "/Common/res/font/" + fileName,
+            exeDir + "/Common/Media/" + fileName};
 
         for (auto& attempt : searchPaths) {
             size_t p;
-            while ((p = attempt.find(L"//")) != std::wstring::npos)
-                attempt.replace(p, 2, L"/");
-            if (PlatformFileIO.exists(attempt)) {
+            while ((p = attempt.find("//")) != std::string::npos)
+                attempt.replace(p, 2, "/");
+            if (PlatformFilesystem.exists(attempt)) {
                 finalPath = attempt;
                 foundOnDisk = true;
                 break;
@@ -94,13 +94,13 @@ BufferedImage::BufferedImage(const std::wstring& File,
 
         if (foundOnDisk) {
             std::string nativePath = std::filesystem::path(finalPath).string();
-            hr = RenderManager.LoadTextureData(nativePath.c_str(),
+            hr = PlatformRenderer.LoadTextureData(nativePath.c_str(),
                                                &ImageInfo, &data[l]);
         } else {
-            std::wstring archiveKey = L"res/" + fileName;
+            std::string archiveKey = "res/" + fileName;
             if (gameServices().hasArchiveFile(archiveKey)) {
                 std::vector<uint8_t> ba = gameServices().getArchiveFile(archiveKey);
-                hr = RenderManager.LoadTextureData(ba.data(), ba.size(),
+                hr = PlatformRenderer.LoadTextureData(ba.data(), ba.size(),
                                                    &ImageInfo, &data[l]);
             }
         }
@@ -122,22 +122,22 @@ BufferedImage::BufferedImage(const std::wstring& File,
         }
     }
 }
-BufferedImage::BufferedImage(DLCPack* dlcPack, const std::wstring& File,
+BufferedImage::BufferedImage(DLCPack* dlcPack, const std::string& File,
                              bool filenameHasExtension) {
     int32_t hr;
-    std::wstring filePath = File;
+    std::string filePath = File;
     std::uint8_t* pbData = nullptr;
     std::uint32_t dataBytes = 0;
     for (int l = 0; l < 10; l++) data[l] = nullptr;
 
     for (int l = 0; l < 10; l++) {
-        std::wstring name;
-        std::wstring mipMapPath =
-            (l != 0) ? L"MipMapLevel" + toWString<int>(l + 1) : L"";
-        name = L"res" + (filenameHasExtension
+        std::string name;
+        std::string mipMapPath =
+            (l != 0) ? "MipMapLevel" + toWString<int>(l + 1) : "";
+        name = "res" + (filenameHasExtension
                              ? filePath
                              : filePath.substr(0, filePath.length() - 4) +
-                                   mipMapPath + L".png");
+                                   mipMapPath + ".png");
 
         if (!dlcPack->doesPackContainFile(DLCManager::e_DLCType_All, name)) {
             if (l == 0) gameServices().fatalLoadError();
@@ -152,7 +152,7 @@ BufferedImage::BufferedImage(DLCPack* dlcPack, const std::wstring& File,
         }
 
         D3DXIMAGE_INFO ImageInfo;
-        hr = RenderManager.LoadTextureData(pbData, dataBytes, &ImageInfo,
+        hr = PlatformRenderer.LoadTextureData(pbData, dataBytes, &ImageInfo,
                                            &data[l]);
         if (hr == ERROR_SUCCESS && l == 0) {
             width = ImageInfo.Width;
@@ -169,7 +169,7 @@ BufferedImage::BufferedImage(std::uint8_t* pbData, std::uint32_t dataBytes) {
     D3DXIMAGE_INFO ImageInfo;
     memset(&ImageInfo, 0, sizeof(D3DXIMAGE_INFO));
     int32_t hr =
-        RenderManager.LoadTextureData(pbData, dataBytes, &ImageInfo, &data[0]);
+        PlatformRenderer.LoadTextureData(pbData, dataBytes, &ImageInfo, &data[0]);
 
     if (hr == ERROR_SUCCESS) {
         width = ImageInfo.Width;

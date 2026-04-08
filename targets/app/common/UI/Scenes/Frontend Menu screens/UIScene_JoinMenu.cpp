@@ -4,11 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
 #include "app/common/App_Defines.h"
-#include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/Network/SessionInfo.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
@@ -19,9 +15,12 @@
 #include "app/common/UI/UIScene.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/world/Difficulty.h"
 #include "minecraft/world/level/LevelSettings.h"
+#include "platform/PlatformTypes.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 #define UPDATE_PLAYERS_TIMER_ID 0
@@ -55,9 +54,8 @@ void UIScene_JoinMenu::tick() {
     if (!m_friendInfoRequestIssued) {
         ui.NavigateToScene(m_iPad, eUIScene_Timer);
         g_NetworkManager.GetFullFriendSessionInfo(
-            m_selectedSession, [this](bool success) {
-                friendSessionUpdated(success, this);
-            });
+            m_selectedSession,
+            [this](bool success) { friendSessionUpdated(success, this); });
         m_friendInfoRequestIssued = true;
     }
 
@@ -222,8 +220,8 @@ void UIScene_JoinMenu::friendSessionUpdated(bool success, void* pParam) {
     }
 }
 
-int UIScene_JoinMenu::ErrorDialogReturned(void* pParam, int iPad,
-                                          const C4JStorage::EMessageResult) {
+int UIScene_JoinMenu::ErrorDialogReturned(
+    void* pParam, int iPad, const IPlatformStorage::EMessageResult) {
     UIScene_JoinMenu* scene = (UIScene_JoinMenu*)pParam;
     ui.NavigateBack(scene->m_iPad);
 
@@ -235,7 +233,7 @@ void UIScene_JoinMenu::updateComponents() {
     m_parentLayer->showComponent(m_iPad, eUIComponent_Logo, true);
 }
 
-std::wstring UIScene_JoinMenu::getMoviePath() { return L"JoinMenu"; }
+std::string UIScene_JoinMenu::getMoviePath() { return "JoinMenu"; }
 
 void UIScene_JoinMenu::handleInput(int iPad, int key, bool repeat, bool pressed,
                                    bool released, bool& handled) {
@@ -293,15 +291,15 @@ void UIScene_JoinMenu::StartSharedLaunchFlow() {
     if (!app.IsLocalMultiplayerAvailable()) {
         JoinGame(this);
     } else {
-        // ProfileManager.RequestSignInUI(false, false, false, true,
+        // PlatformProfile.RequestSignInUI(false, false, false, true,
         // false,&UIScene_JoinMenu::StartGame_SignInReturned,
-        // this,ProfileManager.GetPrimaryPad());
+        // this,PlatformProfile.GetPrimaryPad());
         SignInInfo info;
         info.Func = [this](bool bContinue, int pad) {
             return StartGame_SignInReturned(this, bContinue, pad);
         };
         info.requireOnline = true;
-        ui.NavigateToScene(ProfileManager.GetPrimaryPad(),
+        ui.NavigateToScene(PlatformProfile.GetPrimaryPad(),
                            eUIScene_QuadrantSignin, &info);
     }
 }
@@ -315,7 +313,7 @@ int UIScene_JoinMenu::StartGame_SignInReturned(void* pParam, bool bContinue,
     }
 
     if (bContinue == true && pClass != nullptr &&
-        ProfileManager.IsSignedIn(iPad)) {
+        PlatformProfile.IsSignedIn(iPad)) {
         JoinGame(pClass);
     }
 
@@ -336,35 +334,35 @@ void UIScene_JoinMenu::JoinGame(UIScene_JoinMenu* pClass) {
     bool isSignedInLive = true;
     int iPadNotSignedInLive = -1;
 
-    ProfileManager.SetLockedProfile(0);  // TEMP!
+    PlatformProfile.SetLockedProfile(0);  // TEMP!
 
     // If we're in SD mode, then only the primary player gets to play
     if (app.IsLocalMultiplayerAvailable()) {
         for (unsigned int index = 0; index < XUSER_MAX_COUNT; ++index) {
-            if (ProfileManager.IsSignedIn(index)) {
-                if (isSignedInLive && !ProfileManager.IsSignedInLive(index)) {
+            if (PlatformProfile.IsSignedIn(index)) {
+                if (isSignedInLive && !PlatformProfile.IsSignedInLive(index)) {
                     // Record the first non signed in live pad
                     iPadNotSignedInLive = index;
                 }
 
-                if (!ProfileManager.AllowedToPlayMultiplayer(index))
+                if (!PlatformProfile.AllowedToPlayMultiplayer(index))
                     noPrivileges = true;
                 dwLocalUsersMask |=
                     CGameNetworkManager::GetLocalPlayerMask(index);
                 isSignedInLive =
-                    isSignedInLive && ProfileManager.IsSignedInLive(index);
+                    isSignedInLive && PlatformProfile.IsSignedInLive(index);
             }
         }
     } else {
-        if (ProfileManager.IsSignedIn(ProfileManager.GetPrimaryPad())) {
-            if (!ProfileManager.AllowedToPlayMultiplayer(
-                    ProfileManager.GetPrimaryPad()))
+        if (PlatformProfile.IsSignedIn(PlatformProfile.GetPrimaryPad())) {
+            if (!PlatformProfile.AllowedToPlayMultiplayer(
+                    PlatformProfile.GetPrimaryPad()))
                 noPrivileges = true;
             dwLocalUsersMask |= CGameNetworkManager::GetLocalPlayerMask(
-                ProfileManager.GetPrimaryPad());
+                PlatformProfile.GetPrimaryPad());
 
             isSignedInLive =
-                ProfileManager.IsSignedInLive(ProfileManager.GetPrimaryPad());
+                PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad());
         }
     }
 
@@ -377,7 +375,7 @@ void UIScene_JoinMenu::JoinGame(UIScene_JoinMenu* pClass) {
             uiIDA[0] = IDS_CONFIRM_OK;
             ui.RequestErrorMessage(IDS_PRO_NOTONLINE_TITLE,
                                    IDS_PRO_NOTONLINE_TEXT, uiIDA, 1,
-                                   ProfileManager.GetPrimaryPad());
+                                   PlatformProfile.GetPrimaryPad());
         }
         return;
     }
@@ -388,8 +386,9 @@ void UIScene_JoinMenu::JoinGame(UIScene_JoinMenu* pClass) {
     bool pccAllowed = true;
     bool pccFriendsAllowed = true;
 
-    ProfileManager.AllowedPlayerCreatedContent(
-        ProfileManager.GetPrimaryPad(), false, &pccAllowed, &pccFriendsAllowed);
+    PlatformProfile.AllowedPlayerCreatedContent(PlatformProfile.GetPrimaryPad(),
+                                                false, &pccAllowed,
+                                                &pccFriendsAllowed);
     if (!pccAllowed && !pccFriendsAllowed) noUGC = true;
 
     if (noUGC) {
@@ -408,7 +407,7 @@ void UIScene_JoinMenu::JoinGame(UIScene_JoinMenu* pClass) {
         uiIDA[0] = IDS_CONFIRM_OK;
         ui.RequestErrorMessage(IDS_NO_MULTIPLAYER_PRIVILEGE_TITLE,
                                IDS_NO_MULTIPLAYER_PRIVILEGE_JOIN_TEXT, uiIDA, 1,
-                               ProfileManager.GetPrimaryPad());
+                               PlatformProfile.GetPrimaryPad());
     } else {
         CGameNetworkManager::eJoinGameResult result = g_NetworkManager.JoinGame(
             pClass->m_selectedSession, dwLocalUsersMask);
@@ -434,7 +433,7 @@ void UIScene_JoinMenu::JoinGame(UIScene_JoinMenu* pClass) {
                 uiIDA[0] = IDS_CONFIRM_OK;
                 ui.RequestErrorMessage(IDS_CONNECTION_FAILED,
                                        exitReasonStringId, uiIDA, 1,
-                                       ProfileManager.GetPrimaryPad());
+                                       PlatformProfile.GetPrimaryPad());
                 exitReasonStringId = -1;
 
                 ui.NavigateToHomeMenu();
@@ -466,14 +465,14 @@ void UIScene_JoinMenu::handleTimerComplete(int id) {
                         if (app.DebugSettingsOn() &&
                             (app.GetGameSettingsDebugMask() &
                              (1L << eDebugSetting_DebugLeaderboards))) {
-                            playersList.SetText(i, L"WWWWWWWWWWWWWWWW");
+                            playersList.SetText(i, "WWWWWWWWWWWWWWWW");
                         } else
 #endif
                         {
-                            playersList.SetText(
-                                i, convStringToWstring(
-                                       m_selectedSession->data.szPlayers[i])
-                                       .c_str());
+                            playersList
+                                .SetText(i,
+                                         m_selectedSession->data.szPlayers[i])
+                                .c_str();
                         }
                     } else {
                         // Leave the loop when we hit the first nullptr player

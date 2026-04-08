@@ -3,8 +3,7 @@
 #include <memory>
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/Network/GameNetworkManager.h"
@@ -90,11 +89,11 @@ UIScene_InGameInfoMenu::~UIScene_InGameInfoMenu() {
     }
 }
 
-std::wstring UIScene_InGameInfoMenu::getMoviePath() {
+std::string UIScene_InGameInfoMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"InGameInfoMenuSplit";
+        return "InGameInfoMenuSplit";
     } else {
-        return L"InGameInfoMenu";
+        return "InGameInfoMenu";
     }
 }
 
@@ -269,7 +268,7 @@ void UIScene_InGameInfoMenu::handleInput(int iPad, int key, bool repeat,
                 if (player != nullptr) {
                     PlayerUID uid = player->GetUID();
                     if (uid != INVALID_XUID) {
-                        ProfileManager.ShowProfileCard(iPad, uid);
+                        PlatformProfile.ShowProfileCard(iPad, uid);
                     }
                 }
             }
@@ -367,7 +366,7 @@ void UIScene_InGameInfoMenu::OnPlayerChanged(void* callbackParam,
                                              INetworkPlayer* pPlayer,
                                              bool leaving) {
     app.DebugPrintf(
-        "<UIScene_InGameInfoMenu::OnPlayerChanged> Player \"%ls\" %s (smallId: "
+        "<UIScene_InGameInfoMenu::OnPlayerChanged> Player \"%s\" %s (smallId: "
         "%d)\n",
         pPlayer->GetOnlineName(), leaving ? "leaving" : "joining",
         pPlayer->GetSmallId());
@@ -392,12 +391,12 @@ void UIScene_InGameInfoMenu::OnPlayerChanged(void* callbackParam,
 
     if (leaving && !playerFound)
         app.DebugPrintf(
-            "<UIScene_InGameInfoMenu::OnPlayerChanged> Error: Player \"%ls\" "
+            "<UIScene_InGameInfoMenu::OnPlayerChanged> Error: Player \"%s\" "
             "leaving but not found in list\n",
             pPlayer->GetOnlineName());
     if (!leaving && playerFound)
         app.DebugPrintf(
-            "<UIScene_InGameInfoMenu::OnPlayerChanged> Error: Player \"%ls\" "
+            "<UIScene_InGameInfoMenu::OnPlayerChanged> Error: Player \"%s\" "
             "joining but already in list\n",
             pPlayer->GetOnlineName());
 
@@ -405,7 +404,7 @@ void UIScene_InGameInfoMenu::OnPlayerChanged(void* callbackParam,
     // added again later)
     if (playerFound) {
         app.DebugPrintf(
-            "<UIScene_InGameInfoMenu::OnPlayerChanged> Player \"%ls\" found, "
+            "<UIScene_InGameInfoMenu::OnPlayerChanged> Player \"%s\" found, "
             "removing\n",
             pPlayer->GetOnlineName());
 
@@ -420,7 +419,7 @@ void UIScene_InGameInfoMenu::OnPlayerChanged(void* callbackParam,
     // If the player is joining
     if (!leaving) {
         app.DebugPrintf(
-            "<UIScene_InGameInfoMenu::OnPlayerChanged> Player \"%ls\" not "
+            "<UIScene_InGameInfoMenu::OnPlayerChanged> Player \"%s\" not "
             "found, adding\n",
             pPlayer->GetOnlineName());
 
@@ -435,11 +434,11 @@ void UIScene_InGameInfoMenu::OnPlayerChanged(void* callbackParam,
 }
 
 int UIScene_InGameInfoMenu::KickPlayerReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     std::uint8_t smallId = *(std::uint8_t*)pParam;
     delete (std::uint8_t*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
         Minecraft* pMinecraft = Minecraft::GetInstance();
         std::shared_ptr<MultiplayerLocalPlayer> localPlayer =
             pMinecraft->localplayers[iPad];
@@ -457,11 +456,11 @@ UIScene_InGameInfoMenu::PlayerInfo* UIScene_InGameInfoMenu::BuildPlayerInfo(
     PlayerInfo* info = new PlayerInfo();
     info->m_smallId = player->GetSmallId();
 
-    std::wstring playerName = L"";
+    std::string playerName = "";
 #if !defined(_CONTENT_PACKAGE)
     if (app.DebugSettingsOn() && (app.GetGameSettingsDebugMask() &
                                   (1L << eDebugSetting_DebugLeaderboards))) {
-        playerName = L"WWWWWWWWWWWWWWWW";
+        playerName = "WWWWWWWWWWWWWWWW";
     } else
 #endif
     {

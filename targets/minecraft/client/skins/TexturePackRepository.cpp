@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "DLCTexturePack.h"
 #include "DefaultTexturePack.h"
 #include "minecraft/GameEnums.h"
@@ -63,12 +63,12 @@ bool TexturePackRepository::selectSkin(TexturePack* skin) {
     return true;
 }
 
-void TexturePackRepository::selectWebSkin(const std::wstring& url) {
+void TexturePackRepository::selectWebSkin(const std::string& url) {
     Log::info(
         "TexturePackRepository::selectWebSkin is not implemented\n");
 }
 
-void TexturePackRepository::downloadWebSkin(const std::wstring& url,
+void TexturePackRepository::downloadWebSkin(const std::string& url,
                                             File file) {
     Log::info(
         "TexturePackRepository::selectWebSkin is not implemented\n");
@@ -87,9 +87,9 @@ void TexturePackRepository::updateList() {
     // up-to-date as we go
 }
 
-std::wstring TexturePackRepository::getIdOrNull(File file) {
+std::string TexturePackRepository::getIdOrNull(File file) {
     Log::info("TexturePackRepository::getIdOrNull is not implemented\n");
-    return L"";
+    return "";
 }
 
 std::vector<File> TexturePackRepository::getWorkDirContents() {
@@ -122,14 +122,14 @@ bool TexturePackRepository::canUseWebSkin() {
     return false;
 }
 
-std::vector<std::pair<std::uint32_t, std::wstring> >*
+std::vector<std::pair<std::uint32_t, std::string> >*
 TexturePackRepository::getTexturePackIdNames() {
-    std::vector<std::pair<std::uint32_t, std::wstring> >* packList =
-        new std::vector<std::pair<std::uint32_t, std::wstring> >();
+    std::vector<std::pair<std::uint32_t, std::string> >* packList =
+        new std::vector<std::pair<std::uint32_t, std::string> >();
 
     for (auto it = texturePacks->begin(); it != texturePacks->end(); ++it) {
         TexturePack* pack = *it;
-        packList->push_back(std::pair<std::uint32_t, std::wstring>(
+        packList->push_back(std::pair<std::uint32_t, std::string>(
             pack->getId(), pack->getName()));
     }
     return packList;
@@ -151,7 +151,7 @@ bool TexturePackRepository::selectTexturePackById(std::uint32_t id) {
             selectSkin(newPack);
 
             if (newPack->hasData()) {
-                gameServices().setAction(InputManager.GetPrimaryPad(),
+                gameServices().setAction(PlatformInput.GetPrimaryPad(),
                               eAppAction_ReloadTexturePack);
             } else {
                 newPack->loadData();
@@ -167,7 +167,7 @@ bool TexturePackRepository::selectTexturePackById(std::uint32_t id) {
             "Failed to select texture pack %d as it is not in the list\n", id);
         // Fail safely
         if (selectSkin(DEFAULT_TEXTURE_PACK)) {
-            gameServices().setAction(InputManager.GetPrimaryPad(),
+            gameServices().setAction(PlatformInput.GetPrimaryPad(),
                           eAppAction_ReloadTexturePack);
         }
     }
@@ -198,11 +198,11 @@ TexturePack* TexturePackRepository::addTexturePackFromDLC(DLCPack* dlcPack,
         cacheById[parentId] = newPack;
 
 #if !defined(_CONTENT_PACKAGE)
-        if (dlcPack->hasPurchasedFile(DLCManager::e_DLCType_TexturePack, L"")) {
-            wprintf(L"Added new FULL DLCTexturePack: %ls - id=%u\n",
+        if (dlcPack->hasPurchasedFile(DLCManager::e_DLCType_TexturePack, "")) {
+            printf("Added new FULL DLCTexturePack: %s - id=%u\n",
                     dlcPack->getName().c_str(), parentId);
         } else {
-            wprintf(L"Added new TRIAL DLCTexturePack: %ls - id=%u\n",
+            printf("Added new TRIAL DLCTexturePack: %s - id=%u\n",
                     dlcPack->getName().c_str(), parentId);
         }
 #endif

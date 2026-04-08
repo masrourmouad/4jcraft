@@ -8,7 +8,7 @@
 
 #include "app/common/App_structs.h"
 #include "app/common/DLC/DLCManager.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "platform/XboxStubs.h"
 
 struct SCreditTextItemDef;
@@ -32,14 +32,14 @@ public:
     void clearDLCInstalled() { m_bDLCInstallProcessCompleted = false; }
 
     static int marketplaceCountsCallback(void* pParam,
-                                         C4JStorage::DLC_TMS_DETAILS*,
+                                         IPlatformStorage::DLC_TMS_DETAILS*,
                                          int iPad);
 
     // DLC info registration
-    static int32_t registerDLCData(wchar_t*, wchar_t*, int, uint64_t, uint64_t,
-                                   wchar_t*, unsigned int, int,
-                                   wchar_t* pDataFile);
-    bool getDLCFullOfferIDForSkinID(const std::wstring& FirstSkin,
+    static int32_t registerDLCData(char*, char*, int, uint64_t, uint64_t,
+                                   char*, unsigned int, int,
+                                   char* pDataFile);
+    bool getDLCFullOfferIDForSkinID(const std::string& FirstSkin,
                                     uint64_t* pullVal);
     bool getDLCFullOfferIDForPackID(const int iPackID, uint64_t* pullVal);
     DLC_INFO* getDLCInfoForTrialOfferID(uint64_t ullOfferID_Trial);
@@ -73,12 +73,12 @@ public:
     unsigned int addTMSPPFileTypeRequest(eDLCContentType eType,
                                          bool bPromote = false);
     static int tmsPPFileReturned(void* pParam, int iPad, int iUserData,
-                                 C4JStorage::PTMSPP_FILEDATA pFileData,
+                                 IPlatformStorage::PTMSPP_FILEDATA pFileData,
                                  const char* szFilename);
 
     // Credit text
-    void addCreditText(const wchar_t* lpStr);
-    bool alreadySeenCreditText(const std::wstring& wstemp);
+    void addCreditText(const char* lpStr);
+    bool alreadySeenCreditText(const std::string& wstemp);
     unsigned int getDLCCreditsCount();
     SCreditTextItemDef* getDLCCredits(int iIndex);
 
@@ -100,7 +100,7 @@ public:
     void setTickTMSDLCFiles(bool bVal) { m_bTickTMSDLCFiles = bVal; }
 
     // Public data needed by other parts
-    std::vector<std::wstring> m_vCreditText;
+    std::vector<std::string> m_vCreditText;
     std::uint8_t* m_pDLCFileBuffer;
     unsigned int m_dwDLCFileSize;
 
@@ -113,7 +113,7 @@ public:
     static std::unordered_map<int, uint64_t> DLCTextures_PackID;
     static std::unordered_map<uint64_t, DLC_INFO*> DLCInfo_Trial;
     static std::unordered_map<uint64_t, DLC_INFO*> DLCInfo_Full;
-    static std::unordered_map<std::wstring, uint64_t> DLCInfo_SkinName;
+    static std::unordered_map<std::string, uint64_t> DLCInfo_SkinName;
     static std::uint32_t m_dwContentTypeA[e_Marketplace_MAX];
 
 private:

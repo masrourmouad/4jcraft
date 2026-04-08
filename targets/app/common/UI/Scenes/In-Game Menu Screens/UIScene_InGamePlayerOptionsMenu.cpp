@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "platform/InputActions.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/Network/NetworkPlayerInterface.h"
@@ -108,7 +107,7 @@ UIScene_InGamePlayerOptionsMenu::UIScene_InGamePlayerOptionsMenu(
         removeControl(&m_checkboxes[eControl_Op], true);
 #else
         m_checkboxes[eControl_Op].init(
-            L"DEBUG: Creative", eControl_Op,
+            "DEBUG: Creative", eControl_Op,
             Player::getPlayerGamePrivilege(
                 m_playerPrivileges, Player::ePlayerGamePrivilege_CreativeMode));
 #endif
@@ -302,11 +301,11 @@ UIScene_InGamePlayerOptionsMenu::UIScene_InGamePlayerOptionsMenu(
         });
 }
 
-std::wstring UIScene_InGamePlayerOptionsMenu::getMoviePath() {
+std::string UIScene_InGamePlayerOptionsMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"InGamePlayerOptionsSplit";
+        return "InGamePlayerOptionsSplit";
     } else {
-        return L"InGamePlayerOptions";
+        return "InGamePlayerOptions";
     }
 }
 
@@ -591,11 +590,11 @@ void UIScene_InGamePlayerOptionsMenu::handlePress(F64 controlId, F64 childId) {
 }
 
 int UIScene_InGamePlayerOptionsMenu::KickPlayerReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     std::uint8_t smallId = *(std::uint8_t*)pParam;
     delete (std::uint8_t*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
         Minecraft* pMinecraft = Minecraft::GetInstance();
         std::shared_ptr<MultiplayerLocalPlayer> localPlayer =
             pMinecraft->localplayers[iPad];

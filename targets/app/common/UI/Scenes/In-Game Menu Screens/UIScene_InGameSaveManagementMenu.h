@@ -87,13 +87,13 @@ private:
 
 protected:
     // TODO: This should be pure virtual in this class
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
 public:
     int loadSaveDataThumbnailReturned(std::uint8_t* pbThumbnail,
                                      unsigned int thumbnailBytes);
     static int DeleteSaveDialogReturned(void* pParam, int iPad,
-                                        C4JStorage::EMessageResult result);
+                                        IPlatformStorage::EMessageResult result);
     int deleteSaveDataReturned(bool bRes);
 
 protected:

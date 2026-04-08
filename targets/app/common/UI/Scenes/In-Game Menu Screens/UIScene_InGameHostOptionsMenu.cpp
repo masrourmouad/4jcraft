@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "platform/InputActions.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/Network/NetworkPlayerInterface.h"
@@ -81,11 +80,11 @@ UIScene_InGameHostOptionsMenu::UIScene_InGameHostOptionsMenu(
     }
 }
 
-std::wstring UIScene_InGameHostOptionsMenu::getMoviePath() {
+std::string UIScene_InGameHostOptionsMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"InGameHostOptionsSplit";
+        return "InGameHostOptionsSplit";
     } else {
-        return L"InGameHostOptions";
+        return "InGameHostOptions";
     }
 }
 

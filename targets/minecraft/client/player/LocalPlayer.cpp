@@ -28,10 +28,9 @@
 #include "minecraft/world/item/Item.h"
 #include "minecraft/world/level/tile/Tile.h"
 // 4J Stu - Added for tutorial callbacks
-#include "platform/InputActions.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_structs.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Network/GameNetworkManager.h"
@@ -111,11 +110,11 @@ LocalPlayer::LocalPlayer(Minecraft* minecraft, Level* level, User* user,
 
     if (user != nullptr && user->name.length() > 0) {
         customTextureUrl =
-            L"http://s3.amazonaws.com/MinecraftSkins/" + user->name + L".png";
+            "http://s3.amazonaws.com/MinecraftSkins/" + user->name + ".png";
     }
     if (user != nullptr) {
         this->name = user->name;
-        // wprintf(L"Created LocalPlayer with name %ls\n", name.c_str() );
+        // printf("Created LocalPlayer with name %s\n", name.c_str() );
         //  check to see if this player's xuid is in the list of special players
         MOJANG_DATA* pMojangData = gameServices().getMojangDataForXuid(getOnlineXuid());
         if (pMojangData) {
@@ -125,7 +124,7 @@ LocalPlayer::LocalPlayer(Minecraft* minecraft, Level* level, User* user,
     input = nullptr;
     m_iPad = -1;
     m_iScreenSection =
-        C4JRender::VIEWPORT_TYPE_FULLSCREEN;  // assume singleplayer default
+        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;  // assume singleplayer default
     m_bPlayerRespawned = false;
     ullButtonsPressed = 0LL;
     ullDpad_last = ullDpad_this = ullDpad_filtered = 0;
@@ -381,7 +380,7 @@ void LocalPlayer::aiStep() {
         // snap y rotation to nearest 90 degree axis aligned value
         float yRotSnapped = floorf((yRot / 90.0f) + 0.5f) * 90.0f;
 
-        if (InputManager.GetJoypadMapVal(m_iPad) == 0) {
+        if (PlatformInput.GetJoypadMapVal(m_iPad) == 0) {
             if (ullDpad_filtered & (1LL << MINECRAFT_ACTION_DPAD_RIGHT)) {
                 xd = -0.15 * cos(yRotSnapped * std::numbers::pi / 180);
                 zd = -0.15 * sin(yRotSnapped * std::numbers::pi / 180);
@@ -485,28 +484,28 @@ void LocalPlayer::aiStep() {
     }
 
     // Check if the player is idle and the rich presence needs updated
-    if (!m_bIsIdle && InputManager.GetIdleSeconds(m_iPad) > PLAYER_IDLE_TIME) {
-        ProfileManager.SetCurrentGameActivity(m_iPad, CONTEXT_PRESENCE_IDLE,
+    if (!m_bIsIdle && PlatformInput.GetIdleSeconds(m_iPad) > PLAYER_IDLE_TIME) {
+        PlatformProfile.SetCurrentGameActivity(m_iPad, CONTEXT_PRESENCE_IDLE,
                                               false);
         m_bIsIdle = true;
     } else if (m_bIsIdle &&
-               InputManager.GetIdleSeconds(m_iPad) < PLAYER_IDLE_TIME) {
+               PlatformInput.GetIdleSeconds(m_iPad) < PLAYER_IDLE_TIME) {
         // Are we offline or online, and how many players are there
         if (g_NetworkManager.GetPlayerCount() > 1) {
             // only do it for this player here - each player will run this code
             if (g_NetworkManager.IsLocalGame()) {
-                ProfileManager.SetCurrentGameActivity(
+                PlatformProfile.SetCurrentGameActivity(
                     m_iPad, CONTEXT_PRESENCE_MULTIPLAYEROFFLINE, false);
             } else {
-                ProfileManager.SetCurrentGameActivity(
+                PlatformProfile.SetCurrentGameActivity(
                     m_iPad, CONTEXT_PRESENCE_MULTIPLAYER, false);
             }
         } else {
             if (g_NetworkManager.IsLocalGame()) {
-                ProfileManager.SetCurrentGameActivity(
+                PlatformProfile.SetCurrentGameActivity(
                     m_iPad, CONTEXT_PRESENCE_MULTIPLAYER_1POFFLINE, false);
             } else {
-                ProfileManager.SetCurrentGameActivity(
+                PlatformProfile.SetCurrentGameActivity(
                     m_iPad, CONTEXT_PRESENCE_MULTIPLAYER_1P, false);
             }
         }
@@ -524,7 +523,7 @@ void LocalPlayer::changeDimension(int i) {
             Log::info(
                 "LocalPlayer::changeDimension from 1 to 1 but WinScreen has "
                 "not been implemented.\n");
-            __debugbreak();
+            assert(0);
 #endif
         } else {
             awardStat(GenericStats::theEnd(), GenericStats::param_theEnd());
@@ -562,12 +561,12 @@ float LocalPlayer::getFieldOfViewModifier() {
 
 void LocalPlayer::addAdditonalSaveData(CompoundTag* entityTag) {
     Player::addAdditonalSaveData(entityTag);
-    // entityTag->putInt(L"Score", score);
+    // entityTag->putInt("Score", score);
 }
 
 void LocalPlayer::readAdditionalSaveData(CompoundTag* entityTag) {
     Player::readAdditionalSaveData(entityTag);
-    // score = entityTag->getInt(L"Score");
+    // score = entityTag->getInt("Score");
 }
 
 void LocalPlayer::closeContainer() {
@@ -675,7 +674,7 @@ bool LocalPlayer::openFireworks(int x, int y, int z) {
 }
 
 bool LocalPlayer::startEnchanting(int x, int y, int z,
-                                  const std::wstring& name) {
+                                  const std::string& name) {
 #ifdef ENABLE_JAVA_GUIS
     minecraft->setScreen(new EnchantmentScreen(inventory, level, x, y, z));
     bool success = true;
@@ -746,7 +745,7 @@ bool LocalPlayer::openTrap(std::shared_ptr<DispenserTileEntity> trap) {
 }
 
 bool LocalPlayer::openTrading(std::shared_ptr<Merchant> traderTarget,
-                              const std::wstring& name) {
+                              const std::string& name) {
 #ifdef ENABLE_JAVA_GUIS
     minecraft->setScreen(new MerchantScreen(inventory, traderTarget, level));
     bool success = true;
@@ -777,7 +776,7 @@ void LocalPlayer::take(std::shared_ptr<Entity> e, int orgCount) {
         (Level*)minecraft->level, e, shared_from_this(), -0.5f));
 }
 
-void LocalPlayer::chat(const std::wstring& message) {}
+void LocalPlayer::chat(const std::string& message) {}
 
 bool LocalPlayer::isSneaking() { return input->sneaking && !m_isSleeping; }
 
@@ -845,14 +844,14 @@ void LocalPlayer::awardStat(Stat* stat, const std::vector<uint8_t>& param) {
             // achievements don't get awarded to all players e.g. Splitscreen
             // players cannot get theme/avatar/gamerpic and Trial players cannot
             // get any This causes some extreme flooding of some awards
-            if (ProfileManager.CanBeAwarded(m_iPad, ach->getAchievementID())) {
+            if (PlatformProfile.CanBeAwarded(m_iPad, ach->getAchievementID())) {
                 // 4J Stu - Some awards cause a menu to popup. This can be bad,
                 // especially if you are surrounded by mobs! We cannot pause the
                 // game unless in offline single player, but lets at least do it
                 // then
                 if (g_NetworkManager.IsLocalGame() &&
                     g_NetworkManager.GetPlayerCount() == 1 &&
-                    ProfileManager.GetAwardType(ach->getAchievementID()) !=
+                    PlatformProfile.GetAwardType(ach->getAchievementID()) !=
                         EAwardType::Achievement) {
                     ui.CloseUIScenes(m_iPad);
                     ui.NavigateToScene(m_iPad, eUIScene_PauseMenu);
@@ -863,7 +862,7 @@ void LocalPlayer::awardStat(Stat* stat, const std::vector<uint8_t>& param) {
             unsigned long long achBit = ((unsigned long long)1)
                                         << ach->getAchievementID();
             if (!(achBit & m_awardedThisSession)) {
-                ProfileManager.Award(m_iPad, ach->getAchievementID());
+                PlatformProfile.Award(m_iPad, ach->getAchievementID());
                 m_awardedThisSession |= achBit;
             }
         }

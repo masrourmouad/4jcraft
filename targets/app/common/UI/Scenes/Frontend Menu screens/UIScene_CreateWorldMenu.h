@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "IUIScene_StartGame.h"
 #include "app/common/DLC/DLCPack.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
@@ -36,8 +36,8 @@ private:
 
     static int m_iDifficultyTitleSettingA[4];
 
-    std::wstring m_worldName;
-    std::wstring m_seed;
+    std::string m_worldName;
+    std::string m_seed;
 
     UIControl m_controlMainPanel;
     UIControl_Label m_labelWorldName;
@@ -86,7 +86,7 @@ public:
 
 protected:
     // TODO: This should be pure virtual in this class
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
     virtual void handleTimerComplete(int id);
     virtual void handleGainFocus(bool navBack);
@@ -107,10 +107,10 @@ protected:
     static void CreateGame(UIScene_CreateWorldMenu* pClass,
                            int32_t LocalUsersMask);
     static int ConfirmCreateReturned(void* pParam, int iPad,
-                                     C4JStorage::EMessageResult result);
+                                     IPlatformStorage::EMessageResult result);
     static int StartGame_SignInReturned(void* pParam, bool bContinue, int iPad);
     static int MustSignInReturnedPSN(void* pParam, int iPad,
-                                     C4JStorage::EMessageResult result);
+                                     IPlatformStorage::EMessageResult result);
 
     virtual void checkStateAndStartGame();
 };

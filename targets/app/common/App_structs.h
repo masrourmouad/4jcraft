@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "minecraft/GameTypes.h"
@@ -13,7 +13,7 @@
 #include "platform/XboxStubs.h"
 
 typedef struct {
-    wchar_t* wchFilename;
+    char* wchFilename;
     eFileExtensionType eEXT;
     eTMSFileType eTMSType;
     std::uint8_t* pbData;
@@ -150,8 +150,8 @@ typedef struct {
 
     uint64_t ullOfferID_Full;
     uint64_t ullOfferID_Trial;
-    wchar_t wchBanner[MAX_BANNERNAME_SIZE];
-    wchar_t wchDataFile[MAX_BANNERNAME_SIZE];
+    char wchBanner[MAX_BANNERNAME_SIZE];
+    char wchDataFile[MAX_BANNERNAME_SIZE];
     int iGender;
     int iConfig;
     unsigned int uiSortIndex;
@@ -171,12 +171,12 @@ typedef struct _DLCRequest {
 typedef struct _TMSPPRequest {
     eTMSContentState eState;
     eDLCContentType eType;
-    C4JStorage::eGlobalStorage eStorageFacility;
-    C4JStorage::eTMS_FILETYPEVAL eFileTypeVal;
+    IPlatformStorage::eGlobalStorage eStorageFacility;
+    IPlatformStorage::eTMS_FILETYPEVAL eFileTypeVal;
     // char szFilename[MAX_TMSFILENAME_SIZE];
-    int (*CallbackFunc)(void*, int, int, C4JStorage::PTMSPP_FILEDATA,
+    int (*CallbackFunc)(void*, int, int, IPlatformStorage::PTMSPP_FILEDATA,
                         const char* szFilename);
-    wchar_t wchFilename[MAX_TMSFILENAME_SIZE];
+    char wchFilename[MAX_TMSFILENAME_SIZE];
 
     void* lpCallbackParam;
 } TMSPPRequest;

@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_EnchantingMenu.h"
 #include "app/linux/Iggy/include/iggy.h"
@@ -57,7 +57,7 @@ void UIControl_EnchantmentBook::render(IggyCustomDrawCallbackRegion* region) {
 
     Minecraft* pMinecraft = Minecraft::GetInstance();
     int tex = pMinecraft->textures->loadTexture(
-        TN_ITEM_BOOK);  // 4J was L"/1_2_2/item/book.png"
+        TN_ITEM_BOOK);  // 4J was "/1_2_2/item/book.png"
     pMinecraft->textures->bind(tex);
 
     glRotatef(20, 1, 0, 0);

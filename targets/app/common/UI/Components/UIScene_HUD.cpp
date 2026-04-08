@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <memory>
 
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/Components/UIComponent_Chat.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
@@ -32,33 +32,33 @@ UIScene_HUD::UIScene_HUD(int iPad, void* initData, UILayer* parentLayer)
     initialiseMovie();
 
     SetDragonLabel(app.GetString(IDS_BOSS_ENDERDRAGON_HEALTH));
-    SetSelectedLabel(L"");
+    SetSelectedLabel("");
 
     for (unsigned int i = 0; i < CHAT_LINES_COUNT; ++i) {
-        m_labelChatText[i].init(L"");
+        m_labelChatText[i].init("");
     }
-    m_labelJukebox.init(L"");
+    m_labelJukebox.init("");
 
     addTimer(0, 100);
 }
 
-std::wstring UIScene_HUD::getMoviePath() {
+std::string UIScene_HUD::getMoviePath() {
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             m_bSplitscreen = true;
-            return L"HUDSplit";
+            return "HUDSplit";
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             m_bSplitscreen = false;
-            return L"HUD";
+            return "HUD";
             break;
     }
 }
@@ -71,43 +71,43 @@ void UIScene_HUD::updateSafeZone() {
     F64 safeRight = 0.0;
 
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
             safeLeft = getSafeZoneHalfWidth();
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             safeRight = getSafeZoneHalfWidth();
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
             safeTop = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             safeBottom = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
@@ -169,7 +169,7 @@ void UIScene_HUD::customDraw(IggyCustomDrawCallbackRegion* region) {
         std::shared_ptr<ItemInstance> item = invSlot->getItem();
         if (item != nullptr) {
             unsigned char ucAlpha = app.GetGameSettings(
-                ProfileManager.GetPrimaryPad(), eGameSetting_InterfaceOpacity);
+                PlatformProfile.GetPrimaryPad(), eGameSetting_InterfaceOpacity);
             float fVal;
 
             if (ucAlpha < 80) {
@@ -225,7 +225,7 @@ void UIScene_HUD::handleReload() {
     m_showDragonHealth = false;
     m_ticksWithNoBoss = 0;
     m_uiSelectedItemOpacityCountDown = 0;
-    m_displayName = L"";
+    m_displayName = "";
     m_lastShowDisplayName = true;
     m_bRidingHorse = true;
     m_horseHealth = 1;
@@ -239,30 +239,30 @@ void UIScene_HUD::handleReload() {
     m_labelDisplayName.setVisible(m_lastShowDisplayName);
 
     SetDragonLabel(BossMobGuiInfo::name);
-    SetSelectedLabel(L"");
+    SetSelectedLabel("");
 
     for (unsigned int i = 0; i < CHAT_LINES_COUNT; ++i) {
-        m_labelChatText[i].init(L"");
+        m_labelChatText[i].init("");
     }
-    m_labelJukebox.init(L"");
+    m_labelJukebox.init("");
 
     int iGuiScale;
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localplayers[m_iPad] == nullptr ||
         pMinecraft->localplayers[m_iPad]->m_iScreenSection ==
-            C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+            IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
         iGuiScale = app.GetGameSettings(m_iPad, eGameSetting_UISize);
     } else {
         iGuiScale = app.GetGameSettings(m_iPad, eGameSetting_UISizeSplitscreen);
     }
     SetHudSize(iGuiScale);
 
-    SetDisplayName(ProfileManager.GetDisplayName(m_iPad));
+    SetDisplayName(PlatformProfile.GetDisplayName(m_iPad));
 
     repositionHud();
 
-    SetTooltipsEnabled(((ui.GetMenuDisplayed(ProfileManager.GetPrimaryPad())) ||
-                        (app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+    SetTooltipsEnabled(((ui.GetMenuDisplayed(PlatformProfile.GetPrimaryPad())) ||
+                        (app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                                              eGameSetting_Tooltips) != 0)));
 }
 
@@ -539,15 +539,14 @@ void UIScene_HUD::SetDragonHealth(float health) {
     }
 }
 
-void UIScene_HUD::SetDragonLabel(const std::wstring& label) {
+void UIScene_HUD::SetDragonLabel(const std::string& label) {
     IggyDataValue result;
     IggyDataValue value[1];
-    const std::u16string convLabel = wstring_to_u16string(label);
-    IggyStringUTF16 stringVal;
-    stringVal.string = convLabel.c_str();
-    stringVal.length = convLabel.length();
-    value[0].type = IGGY_DATATYPE_string_UTF16;
-    value[0].string16 = stringVal;
+    IggyStringUTF8 stringVal;
+    stringVal.string = const_cast<char*>(label.c_str());
+    stringVal.length = label.length();
+    value[0].type = IGGY_DATATYPE_string_UTF8;
+    value[0].string8 = stringVal;
     IggyResult out = IggyPlayerCallMethodRS(getMovie(), &result,
                                             IggyPlayerRootPath(getMovie()),
                                             m_funcSetDragonLabel, 1, value);
@@ -568,7 +567,7 @@ void UIScene_HUD::ShowDragonHealth(bool show) {
     }
 }
 
-void UIScene_HUD::SetSelectedLabel(const std::wstring& label) {
+void UIScene_HUD::SetSelectedLabel(const std::string& label) {
     // 4J Stu - Timing here is kept the same as on Xbox360, even though we do it
     // differently now and do the fade out in Flash rather than directly setting
     // opacity
@@ -578,12 +577,11 @@ void UIScene_HUD::SetSelectedLabel(const std::wstring& label) {
 
     IggyDataValue result;
     IggyDataValue value[1];
-    const std::u16string convLabel = wstring_to_u16string(label);
-    IggyStringUTF16 stringVal;
-    stringVal.string = convLabel.c_str();
-    stringVal.length = convLabel.length();
-    value[0].type = IGGY_DATATYPE_string_UTF16;
-    value[0].string16 = stringVal;
+    IggyStringUTF8 stringVal;
+    stringVal.string = const_cast<char*>(label.c_str());
+    stringVal.length = label.length();
+    value[0].type = IGGY_DATATYPE_string_UTF8;
+    value[0].string8 = stringVal;
     IggyResult out = IggyPlayerCallMethodRS(getMovie(), &result,
                                             IggyPlayerRootPath(getMovie()),
                                             m_funcSetSelectedLabel, 1, value);
@@ -669,20 +667,20 @@ void UIScene_HUD::SetHealthAbsorb(int healthAbsorb) {
 }
 
 void UIScene_HUD::render(S32 width, S32 height,
-                         C4JRender::eViewportType viewport) {
+                         IPlatformRenderer::eViewportType viewport) {
     if (m_bSplitscreen) {
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
@@ -697,22 +695,22 @@ void UIScene_HUD::render(S32 width, S32 height,
         S32 tileHeight = height;
 
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 tileHeight = (S32)(ui.getScreenHeight());
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
                 tileWidth = (S32)(ui.getScreenWidth());
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 tileWidth = (S32)(ui.getScreenWidth());
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
             default:
@@ -748,13 +746,13 @@ void UIScene_HUD::handleTimerComplete(int id) {
                 m_labelChatText[i].setOpacity(opacity);
                 m_labelChatText[i].setLabel(pGui->getMessagesCount(m_iPad)
                                                 ? pGui->getMessage(m_iPad, i)
-                                                : L"");
+                                                : "");
 
                 anyVisible = true;
             } else {
                 m_controlLabelBackground[i].setOpacity(0);
                 m_labelChatText[i].setOpacity(0);
-                m_labelChatText[i].setLabel(L"");
+                m_labelChatText[i].setLabel("");
             }
         }
         if (pGui->getJukeboxOpacity(m_iPad) > 0) anyVisible = true;
@@ -764,7 +762,7 @@ void UIScene_HUD::handleTimerComplete(int id) {
         for (unsigned int i = 0; i < CHAT_LINES_COUNT; ++i) {
             m_controlLabelBackground[i].setOpacity(0);
             m_labelChatText[i].setOpacity(0);
-            m_labelChatText[i].setLabel(L"");
+            m_labelChatText[i].setLabel("");
         }
         m_labelJukebox.setOpacity(0);
     }
@@ -780,12 +778,12 @@ void UIScene_HUD::repositionHud() {
     m_parentLayer->getRenderDimensions(width, height);
 
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             height = (S32)(ui.getScreenHeight());
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             width = (S32)(ui.getScreenWidth());
             break;
         default:
@@ -811,18 +809,17 @@ void UIScene_HUD::ShowDisplayName(bool show) {
     m_labelDisplayName.setVisible(show);
 }
 
-void UIScene_HUD::SetDisplayName(const std::wstring& displayName) {
+void UIScene_HUD::SetDisplayName(const std::string& displayName) {
     if (displayName.compare(m_displayName) != 0) {
         m_displayName = displayName;
 
         IggyDataValue result;
         IggyDataValue value[1];
-        IggyStringUTF16 stringVal;
-        const std::u16string convName = wstring_to_u16string(displayName);
-        stringVal.string = convName.c_str();
-        stringVal.length = convName.length();
-        value[0].type = IGGY_DATATYPE_string_UTF16;
-        value[0].string16 = stringVal;
+        IggyStringUTF8 stringVal;
+        stringVal.string = const_cast<char*>(displayName.c_str());
+        stringVal.length = displayName.length();
+        value[0].type = IGGY_DATATYPE_string_UTF8;
+        value[0].string8 = stringVal;
         IggyResult out = IggyPlayerCallMethodRS(getMovie(), &result,
                                                 IggyPlayerRootPath(getMovie()),
                                                 m_funcSetDisplayName, 1, value);

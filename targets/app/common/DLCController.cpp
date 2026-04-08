@@ -6,11 +6,12 @@
 #include "app/common/DLC/DLCSkinFile.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
+#include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "platform/sdl2/Storage.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/storage/storage.h"
+#include "platform/profile/profile.h"
 #include "platform/XboxStubs.h"
 
 #include <cstring>
@@ -36,7 +37,7 @@ std::unordered_map<PlayerUID, MOJANG_DATA*> DLCController::MojangData;
 std::unordered_map<int, uint64_t> DLCController::DLCTextures_PackID;
 std::unordered_map<uint64_t, DLC_INFO*> DLCController::DLCInfo_Trial;
 std::unordered_map<uint64_t, DLC_INFO*> DLCController::DLCInfo_Full;
-std::unordered_map<std::wstring, uint64_t> DLCController::DLCInfo_SkinName;
+std::unordered_map<std::string, uint64_t> DLCController::DLCInfo_SkinName;
 
 std::uint32_t DLCController::m_dwContentTypeA[e_Marketplace_MAX] = {
     XMARKETPLACE_OFFERING_TYPE_CONTENT,
@@ -46,7 +47,7 @@ std::uint32_t DLCController::m_dwContentTypeA[e_Marketplace_MAX] = {
 };
 
 int DLCController::marketplaceCountsCallback(
-    void* pParam, C4JStorage::DLC_TMS_DETAILS* pTMSDetails, int iPad) {
+    void* pParam, IPlatformStorage::DLC_TMS_DETAILS* pTMSDetails, int iPad) {
     app.DebugPrintf("Marketplace Counts= New - %d Total - %d\n",
                     pTMSDetails->dwNewOffers, pTMSDetails->dwTotalOffers);
 
@@ -73,9 +74,9 @@ bool DLCController::startInstallDLCProcess(int iPad) {
         m_iTotalDLCInstalled = 0;
         app.DebugPrintf(
             "--- DLCController::startInstallDLCProcess - "
-            "StorageManager.GetInstalledDLC\n");
+            "PlatformStorage.GetInstalledDLC\n");
 
-        StorageManager.GetInstalledDLC(
+        PlatformStorage.GetInstalledDLC(
             iPad, [this](int iInstalledC, int pad) {
                 return dlcInstalledCallback(iInstalledC, pad);
             });
@@ -99,7 +100,7 @@ int DLCController::dlcInstalledCallback(int iInstalledC, int iPad) {
 void DLCController::mountNextDLC(int iPad) {
     app.DebugPrintf("--- DLCController::mountNextDLC: pad=%i.\n", iPad);
     if (m_iTotalDLCInstalled < m_iTotalDLC) {
-        if (StorageManager.MountInstalledDLC(
+        if (PlatformStorage.MountInstalledDLC(
                 iPad, m_iTotalDLCInstalled,
                 [this](int pad, std::uint32_t dwErr,
                        std::uint32_t dwLicenceMask) {
@@ -110,7 +111,7 @@ void DLCController::mountNextDLC(int iPad) {
             ++m_iTotalDLCInstalled;
             mountNextDLC(iPad);
         } else {
-            app.DebugPrintf("StorageManager.MountInstalledDLC ok\n");
+            app.DebugPrintf("PlatformStorage.MountInstalledDLC ok\n");
         }
     } else {
         m_bDLCInstallPending = false;
@@ -135,21 +136,21 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
         app.m_dlcManager.incrementUnnamedCorruptCount();
     } else {
         XCONTENT_DATA ContentData =
-            StorageManager.GetDLC(m_iTotalDLCInstalled);
+            PlatformStorage.GetDLC(m_iTotalDLCInstalled);
 
         DLCPack* pack =
             app.m_dlcManager.getPack(CONTENT_DATA_DISPLAY_NAME(ContentData));
 
         if (pack != nullptr && pack->IsCorrupt()) {
             app.DebugPrintf(
-                "Pack '%ls' is corrupt, removing it from the DLC Manager.\n",
+                "Pack '%s' is corrupt, removing it from the DLC Manager.\n",
                 CONTENT_DATA_DISPLAY_NAME(ContentData));
             app.m_dlcManager.removePack(pack);
             pack = nullptr;
         }
 
         if (pack == nullptr) {
-            app.DebugPrintf("Pack \"%ls\" is not installed, so adding it\n",
+            app.DebugPrintf("Pack \"%s\" is not installed, so adding it\n",
                             CONTENT_DATA_DISPLAY_NAME(ContentData));
 
 #if defined(_WINDOWS64)
@@ -168,7 +169,7 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
             }
         } else {
             app.DebugPrintf(
-                "Pack \"%ls\" is already installed. Updating license to %u\n",
+                "Pack \"%s\" is already installed. Updating license to %u\n",
                 CONTENT_DATA_DISPLAY_NAME(ContentData), dwLicenceMask);
 
             pack->SetDLCMountIndex(m_iTotalDLCInstalled);
@@ -176,7 +177,7 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
             pack->updateLicenseMask(dwLicenceMask);
         }
 
-        StorageManager.UnmountInstalledDLC();
+        PlatformStorage.UnmountInstalledDLC();
     }
     ++m_iTotalDLCInstalled;
     mountNextDLC(iPad);
@@ -190,7 +191,7 @@ void DLCController::handleDLC(DLCPack* pack) {
 #if defined(_WINDOWS64) || defined(__linux__)
     std::vector<std::string> dlcFilenames;
 #endif
-    StorageManager.GetMountedDLCFileList("DLCDrive", dlcFilenames);
+    PlatformStorage.GetMountedDLCFileList("DLCDrive", dlcFilenames);
     for (int i = 0; i < dlcFilenames.size(); i++) {
         app.m_dlcManager.readDLCDataFile(dwFilesProcessed, dlcFilenames[i],
                                           pack);
@@ -198,25 +199,25 @@ void DLCController::handleDLC(DLCPack* pack) {
     if (dwFilesProcessed == 0) app.m_dlcManager.removePack(pack);
 }
 
-void DLCController::addCreditText(const wchar_t* lpStr) {
-    app.DebugPrintf("ADDING CREDIT - %ls\n", lpStr);
+void DLCController::addCreditText(const char* lpStr) {
+    app.DebugPrintf("ADDING CREDIT - %s\n", lpStr);
     SCreditTextItemDef* pCreditStruct = new SCreditTextItemDef;
     pCreditStruct->m_eType = eSmallText;
     pCreditStruct->m_iStringID[0] = NO_TRANSLATED_STRING;
     pCreditStruct->m_iStringID[1] = NO_TRANSLATED_STRING;
-    pCreditStruct->m_Text = new wchar_t[wcslen(lpStr) + 1];
-    wcscpy((wchar_t*)pCreditStruct->m_Text, lpStr);
+    pCreditStruct->m_Text = new char[strlen(lpStr) + 1];
+    strcpy((char*)pCreditStruct->m_Text, lpStr);
     vDLCCredits.push_back(pCreditStruct);
 }
 
-bool DLCController::alreadySeenCreditText(const std::wstring& wstemp) {
+bool DLCController::alreadySeenCreditText(const std::string& wstemp) {
     for (unsigned int i = 0; i < m_vCreditText.size(); i++) {
-        std::wstring temp = m_vCreditText.at(i);
+        std::string temp = m_vCreditText.at(i);
         if (temp.compare(wstemp) == 0) {
             return true;
         }
     }
-    m_vCreditText.push_back((wchar_t*)wstemp.c_str());
+    m_vCreditText.push_back((char*)wstemp.c_str());
     return false;
 }
 
@@ -229,12 +230,12 @@ SCreditTextItemDef* DLCController::getDLCCredits(int iIndex) {
 }
 
 #if defined(_WINDOWS64)
-int32_t DLCController::registerDLCData(wchar_t* pType, wchar_t* pBannerName,
+int32_t DLCController::registerDLCData(char* pType, char* pBannerName,
                                        int iGender, uint64_t ullOfferID_Full,
                                        uint64_t ullOfferID_Trial,
-                                       wchar_t* pFirstSkin,
+                                       char* pFirstSkin,
                                        unsigned int uiSortIndex, int iConfig,
-                                       wchar_t* pDataFile) {
+                                       char* pDataFile) {
     int32_t hr = 0;
     DLC_INFO* pDLCData = new DLC_INFO;
     memset(pDLCData, 0, sizeof(DLC_INFO));
@@ -245,7 +246,7 @@ int32_t DLCController::registerDLCData(wchar_t* pType, wchar_t* pBannerName,
     pDLCData->uiSortIndex = uiSortIndex;
     pDLCData->iConfig = iConfig;
 
-    if (pBannerName != L"") {
+    if (pBannerName != "") {
         wcsncpy_s(pDLCData->wchBanner, pBannerName, MAX_BANNERNAME_SIZE);
     }
     if (pDataFile[0] != 0) {
@@ -253,18 +254,18 @@ int32_t DLCController::registerDLCData(wchar_t* pType, wchar_t* pBannerName,
     }
 
     if (pType != nullptr) {
-        if (wcscmp(pType, L"Skin") == 0) {
+        if (strcmp(pType, "Skin") == 0) {
             pDLCData->eDLCType = e_DLC_SkinPack;
-        } else if (wcscmp(pType, L"Gamerpic") == 0) {
+        } else if (strcmp(pType, "Gamerpic") == 0) {
             pDLCData->eDLCType = e_DLC_Gamerpics;
-        } else if (wcscmp(pType, L"Theme") == 0) {
+        } else if (strcmp(pType, "Theme") == 0) {
             pDLCData->eDLCType = e_DLC_Themes;
-        } else if (wcscmp(pType, L"Avatar") == 0) {
+        } else if (strcmp(pType, "Avatar") == 0) {
             pDLCData->eDLCType = e_DLC_AvatarItems;
-        } else if (wcscmp(pType, L"MashUpPack") == 0) {
+        } else if (strcmp(pType, "MashUpPack") == 0) {
             pDLCData->eDLCType = e_DLC_MashupPacks;
             DLCTextures_PackID[pDLCData->iConfig] = ullOfferID_Full;
-        } else if (wcscmp(pType, L"TexturePack") == 0) {
+        } else if (strcmp(pType, "TexturePack") == 0) {
             pDLCData->eDLCType = e_DLC_TexturePacks;
             DLCTextures_PackID[pDLCData->iConfig] = ullOfferID_Full;
         }
@@ -277,12 +278,12 @@ int32_t DLCController::registerDLCData(wchar_t* pType, wchar_t* pBannerName,
     return hr;
 }
 #elif defined(__linux__)
-int32_t DLCController::registerDLCData(wchar_t* pType, wchar_t* pBannerName,
+int32_t DLCController::registerDLCData(char* pType, char* pBannerName,
                                        int iGender, uint64_t ullOfferID_Full,
                                        uint64_t ullOfferID_Trial,
-                                       wchar_t* pFirstSkin,
+                                       char* pFirstSkin,
                                        unsigned int uiSortIndex, int iConfig,
-                                       wchar_t* pDataFile) {
+                                       char* pDataFile) {
     fprintf(stderr,
             "warning: DLCController::registerDLCData unimplemented for "
             "platform `__linux__`\n");
@@ -290,7 +291,7 @@ int32_t DLCController::registerDLCData(wchar_t* pType, wchar_t* pBannerName,
 }
 #endif
 
-bool DLCController::getDLCFullOfferIDForSkinID(const std::wstring& FirstSkin,
+bool DLCController::getDLCFullOfferIDForSkinID(const std::string& FirstSkin,
                                                uint64_t* pullVal) {
     auto it = DLCInfo_SkinName.find(FirstSkin);
     if (it == DLCInfo_SkinName.end()) {
@@ -413,8 +414,8 @@ unsigned int DLCController::addDLCRequest(eDLCMarketplaceType eType,
 }
 
 bool DLCController::retrieveNextDLCContent() {
-    int primPad = ProfileManager.GetPrimaryPad();
-    if (primPad == -1 || !ProfileManager.IsSignedInLive(primPad)) {
+    int primPad = PlatformProfile.GetPrimaryPad();
+    if (primPad == -1 || !PlatformProfile.IsSignedInLive(primPad)) {
         return true;
     }
 
@@ -436,13 +437,13 @@ bool DLCController::retrieveNextDLCContent() {
                 app.DebugPrintf("RetrieveNextDLCContent - type = %d\n",
                                 pCurrent->dwType);
 #endif
-                C4JStorage::EDLCStatus status = StorageManager.GetDLCOffers(
-                    ProfileManager.GetPrimaryPad(),
+                IPlatformStorage::EDLCStatus status = PlatformStorage.GetDLCOffers(
+                    PlatformProfile.GetPrimaryPad(),
                     [this](int iOfferC, std::uint32_t dwType, int pad) {
                         return dlcOffersReturned(iOfferC, dwType, pad);
                     },
                     pCurrent->dwType);
-                if (status == C4JStorage::EDLC_Pending) {
+                if (status == IPlatformStorage::EDLC_Pending) {
                     pCurrent->eState = e_DLC_ContentState_Retrieving;
                 } else {
                     app.DebugPrintf("RetrieveNextDLCContent - PROBLEM\n");
@@ -584,7 +585,7 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
                             for (auto it = m_TMSPPDownloadQueue.begin();
                                  it != m_TMSPPDownloadQueue.end(); ++it) {
                                 TMSPPRequest* pCurrent = *it;
-                                if (wcscmp(pDLC->wchDataFile,
+                                if (strcmp(pDLC->wchDataFile,
                                            pCurrent->wchFilename) == 0) {
                                     bAlreadyInQueue = true;
                                     break;
@@ -597,12 +598,12 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
                                     &DLCController::tmsPPFileReturned;
                                 pTMSPPreq->lpCallbackParam = this;
                                 pTMSPPreq->eStorageFacility =
-                                    C4JStorage::eGlobalStorage_Title;
+                                    IPlatformStorage::eGlobalStorage_Title;
                                 pTMSPPreq->eFileTypeVal =
-                                    C4JStorage::TMS_FILETYPE_BINARY;
+                                    IPlatformStorage::TMS_FILETYPE_BINARY;
                                 memcpy(pTMSPPreq->wchFilename,
                                        pDLC->wchDataFile,
-                                       sizeof(wchar_t) * MAX_BANNERNAME_SIZE);
+                                       sizeof(char) * MAX_BANNERNAME_SIZE);
                                 pTMSPPreq->eType = e_DLC_TexturePackData;
                                 pTMSPPreq->eState = e_TMS_ContentState_Queued;
                                 m_bAllTMSContentRetrieved = false;
@@ -622,7 +623,7 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
         for (int i = 0; i < iCount; i++) {
             DLC_INFO* pDLC = getDLCInfoFullOffer(i);
             if (pDLC->eDLCType == eType) {
-                wchar_t* cString = pDLC->wchBanner;
+                char* cString = pDLC->wchBanner;
                 {
                     bool bPresent = app.IsFileInMemoryTextures(cString);
 
@@ -631,7 +632,7 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
                         for (auto it = m_TMSPPDownloadQueue.begin();
                              it != m_TMSPPDownloadQueue.end(); ++it) {
                             TMSPPRequest* pCurrent = *it;
-                            if (wcscmp(pDLC->wchBanner,
+                            if (strcmp(pDLC->wchBanner,
                                        pCurrent->wchFilename) == 0) {
                                 bAlreadyInQueue = true;
                                 break;
@@ -645,17 +646,17 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
                                 &DLCController::tmsPPFileReturned;
                             pTMSPPreq->lpCallbackParam = this;
                             pTMSPPreq->eStorageFacility =
-                                C4JStorage::eGlobalStorage_Title;
+                                IPlatformStorage::eGlobalStorage_Title;
                             pTMSPPreq->eFileTypeVal =
-                                C4JStorage::TMS_FILETYPE_BINARY;
+                                IPlatformStorage::TMS_FILETYPE_BINARY;
                             memcpy(pTMSPPreq->wchFilename, pDLC->wchBanner,
-                                   sizeof(wchar_t) * MAX_BANNERNAME_SIZE);
+                                   sizeof(char) * MAX_BANNERNAME_SIZE);
                             pTMSPPreq->eType = eType;
                             pTMSPPreq->eState = e_TMS_ContentState_Queued;
                             m_bAllTMSContentRetrieved = false;
                             m_TMSPPDownloadQueue.push_back(pTMSPPreq);
                             app.DebugPrintf(
-                                "===m_TMSPPDownloadQueue Adding %ls, q size is "
+                                "===m_TMSPPDownloadQueue Adding %s, q size is "
                                 "%d\n",
                                 pTMSPPreq->wchFilename,
                                 m_TMSPPDownloadQueue.size());
@@ -670,7 +671,7 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
 }
 
 int DLCController::tmsPPFileReturned(void* pParam, int iPad, int iUserData,
-                                     C4JStorage::PTMSPP_FILEDATA pFileData,
+                                     IPlatformStorage::PTMSPP_FILEDATA pFileData,
                                      const char* szFilename) {
     DLCController* pClass = (DLCController*)pParam;
 
@@ -681,7 +682,7 @@ int DLCController::tmsPPFileReturned(void* pParam, int iPad, int iUserData,
             TMSPPRequest* pCurrent = *it;
 #if defined(_WINDOWS64)
             char szFile[MAX_TMSFILENAME_SIZE];
-            wcstombs(szFile, pCurrent->wchFilename, MAX_TMSFILENAME_SIZE);
+            strncpy(szFile, pCurrent->wchFilename, MAX_TMSFILENAME_SIZE);
 
             if (strcmp(szFilename, szFile) == 0)
 #endif
@@ -691,7 +692,7 @@ int DLCController::tmsPPFileReturned(void* pParam, int iPad, int iUserData,
                 if (pFileData != nullptr) {
                     switch (pCurrent->eType) {
                         case e_DLC_TexturePackData: {
-                            app.DebugPrintf("--- Got texturepack data %ls\n",
+                            app.DebugPrintf("--- Got texturepack data %s\n",
                                             pCurrent->wchFilename);
                             int iConfig =
                                 app.GetTPConfigVal(pCurrent->wchFilename);
@@ -699,7 +700,7 @@ int DLCController::tmsPPFileReturned(void* pParam, int iPad, int iUserData,
                                                  pFileData->size);
                         } break;
                         default:
-                            app.DebugPrintf("--- Got image data - %ls\n",
+                            app.DebugPrintf("--- Got image data - %s\n",
                                             pCurrent->wchFilename);
                             app.AddMemoryTextureFile(pCurrent->wchFilename,
                                                      pFileData->pbData,

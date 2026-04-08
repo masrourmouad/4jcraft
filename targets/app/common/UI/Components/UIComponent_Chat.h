@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
@@ -52,7 +52,7 @@ public:
 
 protected:
     // TODO: This should be pure virtual in this class
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
 public:
     virtual EUIScene getSceneType() { return eUIComponent_Chat; }
@@ -69,7 +69,7 @@ public:
 
     // RENDERING
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewport);
+                        IPlatformRenderer::eViewportType viewport);
 
 protected:
     void handleTimerComplete(int id);

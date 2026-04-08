@@ -6,8 +6,7 @@
 #include <algorithm>
 #include <compare>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/common/Tutorial/Constraints/TutorialConstraint.h"
@@ -1969,7 +1968,7 @@ Tutorial::~Tutorial() {
 
 void Tutorial::debugResetPlayerSavedProgress(int iPad) {
     GAME_SETTINGS* pGameSettings =
-        (GAME_SETTINGS*)ProfileManager.GetGameDefinedProfileData(iPad);
+        (GAME_SETTINGS*)PlatformProfile.GetGameDefinedProfileData(iPad);
     memset(pGameSettings->ucTutorialCompletion, 0,
            TUTORIAL_PROFILE_STORAGE_BYTES);
     pGameSettings->uiSpecialTutorialBitmask = 0;
@@ -1994,7 +1993,7 @@ void Tutorial::setCompleted(int completableId) {
         completableIndex < TUTORIAL_PROFILE_STORAGE_BITS) {
         // Set the bit for this position
         GAME_SETTINGS* pGameSettings =
-            (GAME_SETTINGS*)ProfileManager.GetGameDefinedProfileData(m_iPad);
+            (GAME_SETTINGS*)PlatformProfile.GetGameDefinedProfileData(m_iPad);
         int arrayIndex = completableIndex >> 3;
         int bitIndex = 7 - (completableIndex % 8);
         pGameSettings->ucTutorialCompletion[arrayIndex] |= 1 << bitIndex;
@@ -2023,7 +2022,7 @@ bool Tutorial::getCompleted(int completableId) {
         // Read the bit for this position
         // Retrieve the data pointer from the profile
         GAME_SETTINGS* pGameSettings =
-            (GAME_SETTINGS*)ProfileManager.GetGameDefinedProfileData(m_iPad);
+            (GAME_SETTINGS*)PlatformProfile.GetGameDefinedProfileData(m_iPad);
         int arrayIndex = completableIndex >> 3;
         int bitIndex = 7 - (completableIndex % 8);
         return (pGameSettings->ucTutorialCompletion[arrayIndex] &
@@ -2443,27 +2442,27 @@ bool Tutorial::setMessage(PopupMessageDetails* message) {
         if (!message->m_replaceCurrent)
             lastMessageTime = time_util::clock::now();
 
-        std::wstring text;
+        std::string text;
         if (!message->m_messageString.empty()) {
             text = message->m_messageString;
         } else {
             auto it = messages.find(message->m_messageId);
             if (it != messages.end() && it->second != nullptr) {
                 TutorialMessage* messageString = it->second;
-                text = std::wstring(messageString->getMessageForDisplay());
+                text = std::string(messageString->getMessageForDisplay());
 
                 // 4J Stu - Quick fix for boat tutorial being incorrect
                 if (message->m_messageId == IDS_TUTORIAL_TASK_BOAT_OVERVIEW) {
-                    text = replaceAll(text, L"{*CONTROLLER_ACTION_USE*}",
-                                      L"{*CONTROLLER_ACTION_DISMOUNT*}");
+                    text = replaceAll(text, "{*CONTROLLER_ACTION_USE*}",
+                                      "{*CONTROLLER_ACTION_DISMOUNT*}");
                 }
             } else {
-                text = std::wstring(app.GetString(message->m_messageId));
+                text = std::string(app.GetString(message->m_messageId));
 
                 // 4J Stu - Quick fix for boat tutorial being incorrect
                 if (message->m_messageId == IDS_TUTORIAL_TASK_BOAT_OVERVIEW) {
-                    text = replaceAll(text, L"{*CONTROLLER_ACTION_USE*}",
-                                      L"{*CONTROLLER_ACTION_DISMOUNT*}");
+                    text = replaceAll(text, "{*CONTROLLER_ACTION_USE*}",
+                                      "{*CONTROLLER_ACTION_DISMOUNT*}");
                 }
             }
         }
@@ -2478,7 +2477,7 @@ bool Tutorial::setMessage(PopupMessageDetails* message) {
             }
         }
 
-        std::wstring title;
+        std::string title;
         TutorialPopupInfo popupInfo;
         popupInfo.interactScene = m_UIScene;
         popupInfo.desc = text.c_str();
@@ -2489,7 +2488,7 @@ bool Tutorial::setMessage(PopupMessageDetails* message) {
         popupInfo.tutorial = this;
         if (!message->m_titleString.empty() || message->m_titleId > 0) {
             if (message->m_titleString.empty())
-                title = std::wstring(app.GetString(message->m_titleId));
+                title = std::string(app.GetString(message->m_titleId));
             else
                 title = message->m_titleString;
 
@@ -2542,7 +2541,7 @@ bool Tutorial::setMessage(TutorialHint* hint, PopupMessageDetails* message) {
     return messageShown;
 }
 
-bool Tutorial::setMessage(const std::wstring& messageString, int icon,
+bool Tutorial::setMessage(const std::string& messageString, int icon,
                           int auxValue) {
     PopupMessageDetails* message = new PopupMessageDetails();
     message->m_messageString = messageString;

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "app/common/Leaderboards/LeaderboardInterface.h"
 #include "app/common/Leaderboards/LeaderboardManager.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
@@ -55,11 +55,11 @@ private:
         unsigned int
             m_row;  // Row identifier for passing to Iggy as a unique identifier
         unsigned int m_rank;
-        wchar_t m_wcRank[12];
-        wchar_t m_gamerTag[XUSER_NAME_SIZE + 1];
+        char m_wcRank[12];
+        char m_gamerTag[XUSER_NAME_SIZE + 1];
         // int			m_locale;
         unsigned int m_columns[7];
-        wchar_t m_wcColumns[7][12];
+        char m_wcColumns[7][12];
         bool m_bPlayer;           // Is the player
         bool m_bOnline;           // Is online
         bool m_bFriend;           // Is friend
@@ -113,7 +113,7 @@ private:
     UI_END_MAP_ELEMENTS_AND_NAMES()
 
     static int ExitLeaderboards(void* pParam, int iPad,
-                                C4JStorage::EMessageResult result);
+                                IPlatformStorage::EMessageResult result);
 
 public:
     UIScene_LeaderboardsMenu(int iPad, void* initData, UILayer* parentLayer);
@@ -132,7 +132,7 @@ private:
     int GetEntryStartIndex();
 
 protected:
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
 public:
     virtual void tick();

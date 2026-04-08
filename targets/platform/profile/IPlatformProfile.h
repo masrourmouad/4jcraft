@@ -5,7 +5,6 @@
 #include <string>
 
 #include "PlatformTypes.h"
-#include "PlatformTypes.h"
 
 class CXuiStringTable;
 
@@ -62,7 +61,7 @@ public:
     [[nodiscard]] virtual int GetPrimaryPad() = 0;
     virtual void SetPrimaryPad(int iPad) = 0;
     [[nodiscard]] virtual char* GetGamertag(int iPad) = 0;
-    [[nodiscard]] virtual std::wstring GetDisplayName(int iPad) = 0;
+    [[nodiscard]] virtual std::string GetDisplayName(int iPad) = 0;
     virtual void SetSignInChangeCallback(
         std::function<void(bool, unsigned int)> callback) = 0;
     virtual void SetNotificationsCallback(

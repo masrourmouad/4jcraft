@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <mutex>
 
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/input/input.h"
+#include "platform/storage/storage.h"
 #include "EntityTracker.h"
 #include "platform/ShutdownManager.h"
 #include "app/common/Console_Debug_enum.h"
@@ -131,7 +131,7 @@ void ServerLevel::staticCtor() {
 
 ServerLevel::ServerLevel(MinecraftServer* server,
                          std::shared_ptr<LevelStorage> levelStorage,
-                         const std::wstring& levelName, int dimension,
+                         const std::string& levelName, int dimension,
                          LevelSettings* levelSettings)
     : Level(levelStorage, levelName, levelSettings,
             Dimension::getNew(dimension), false) {
@@ -326,7 +326,7 @@ void ServerLevel::tick() {
 #if !defined(_FINAL_BUILD)
         bool freezeTime =
             gameServices().debugSettingsOn() &&
-            gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+            gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
                 (1L << eDebugSetting_FreezeTime);
         if (!freezeTime)
 #endif
@@ -925,7 +925,7 @@ Pos* ServerLevel::getDimensionSpecificSpawn() {
 
 // 4j Added for XboxOne PLM
 void ServerLevel::Suspend() {
-    if (StorageManager.GetSaveDisabled()) return;
+    if (PlatformStorage.GetSaveDisabled()) return;
     saveLevelData();
     chunkSource->saveAllEntities();
 }
@@ -935,7 +935,7 @@ void ServerLevel::save(bool force, ProgressListener* progressListener,
     if (!chunkSource->shouldSave()) return;
 
     // 4J-PB - check that saves are enabled
-    if (StorageManager.GetSaveDisabled()) return;
+    if (PlatformStorage.GetSaveDisabled()) return;
 
     if (progressListener != nullptr) {
         if (bAutosave) {
@@ -983,7 +983,7 @@ void ServerLevel::save(bool force, ProgressListener* progressListener,
 void ServerLevel::saveToDisc(ProgressListener* progressListener,
                              bool autosave) {
     // 4J-PB - check that saves are enabled
-    if (StorageManager.GetSaveDisabled()) return;
+    if (PlatformStorage.GetSaveDisabled()) return;
 
     // Check if we are using a trial version of a texture pack (which will be
     // the case for going into the mash-up pack world with a trial version)
@@ -993,7 +993,7 @@ void ServerLevel::saveToDisc(ProgressListener* progressListener,
 
         DLCPack* pDLCPack = pDLCTexPack->getDLCInfoParentPack();
 
-        if (!pDLCPack->hasPurchasedFile(DLCManager::e_DLCType_Texture, L"")) {
+        if (!pDLCPack->hasPurchasedFile(DLCManager::e_DLCType_Texture, "")) {
             return;
         }
     }
@@ -1207,13 +1207,13 @@ PlayerChunkMap* ServerLevel::getChunkMap() { return chunkMap; }
 
 PortalForcer* ServerLevel::getPortalForcer() { return portalForcer; }
 
-void ServerLevel::sendParticles(const std::wstring& name, double x, double y,
+void ServerLevel::sendParticles(const std::string& name, double x, double y,
                                 double z, int count) {
     sendParticles(name, x + 0.5f, y + 0.5f, z + 0.5f, count, 0.5f, 0.5f, 0.5f,
                   0.02f);
 }
 
-void ServerLevel::sendParticles(const std::wstring& name, double x, double y,
+void ServerLevel::sendParticles(const std::string& name, double x, double y,
                                 double z, int count, double xDist, double yDist,
                                 double zDist, double speed) {
     std::shared_ptr<Packet> packet = std::make_shared<LevelParticlesPacket>(

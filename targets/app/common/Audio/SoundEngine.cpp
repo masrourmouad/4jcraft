@@ -16,7 +16,7 @@
 #include "app/linux/Iggy/include/rrCore.h"
 #include "app/linux/LinuxGame.h"
 #include "platform/C4JThread.h"
-#include "platform/PlatformServices.h"
+#include "platform/fs/fs.h"
 #include "java/Random.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
@@ -117,13 +117,6 @@ char SoundEngine::m_szRedistName[] = {"redist64"};
 
 // Linux specific functions
 #if defined(__linux__)
-std::wstring stws(const char* utf8) {
-    size_t len = std::mbstowcs(nullptr, utf8, 0);
-    if (len == static_cast<size_t>(-1)) return L"";
-    std::wstring result(len, L'\0');
-    std::mbstowcs(&result[0], utf8, len);
-    return result;
-}
 SoundEngine::SoundEngine() {}
 std::vector<MiniAudioSound*> m_activeSounds;
 void SoundEngine::init(Options* pOptions) {
@@ -179,11 +172,11 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
                        float pitch) {
     if (iSound == -1) return;
     char szId[256];
-    wcstombs(szId, wchSoundNames[iSound], 255);
+    strncpy(szId, wchSoundNames[iSound], 255);
     for (int i = 0; szId[i]; i++)
         if (szId[i] == '.') szId[i] = '/';
 
-    std::string base = PlatformFileIO.getBasePath().string() + "/";
+    std::string base = PlatformFilesystem.getBasePath().string() + "/";
     const char* roots[] = {
         "Sound/Minecraft/", "app/common/Sound/Minecraft/",
         "app/common/res/TitleUpdate/res/Sound/Minecraft/"};
@@ -197,7 +190,7 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
             for (int i = 1; i <= 16; i++) {
                 char tryP[512];
                 snprintf(tryP, 512, "%s%s%d%s", fullRoot.c_str(), szId, i, ext);
-                if (PlatformFileIO.exists(tryP))
+                if (PlatformFilesystem.exists(tryP))
                     count = i;
                 else
                     break;
@@ -210,7 +203,7 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
             }
             char tryP[512];
             snprintf(tryP, 512, "%s%s%s", fullRoot.c_str(), szId, ext);
-            if (PlatformFileIO.exists(tryP)) {
+            if (PlatformFilesystem.exists(tryP)) {
                 strncpy(finalPath, tryP, 511);
                 found = true;
                 break;
@@ -245,12 +238,12 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
 void SoundEngine::playUI(int iSound, float volume, float pitch) {
     char szIdentifier[256];
     if (iSound >= eSFX_MAX)
-        wcstombs(szIdentifier, wchSoundNames[iSound], 255);
+        strncpy(szIdentifier, wchSoundNames[iSound], 255);
     else
-        wcstombs(szIdentifier, wchUISoundNames[iSound], 255);
+        strncpy(szIdentifier, wchUISoundNames[iSound], 255);
     for (int i = 0; szIdentifier[i]; i++)
         if (szIdentifier[i] == '.') szIdentifier[i] = '/';
-    std::string base = PlatformFileIO.getBasePath().string() + "/";
+    std::string base = PlatformFilesystem.getBasePath().string() + "/";
     const char* roots[] = {
         "Sound/Minecraft/UI/",
         "Sound/Minecraft/",
@@ -265,7 +258,7 @@ void SoundEngine::playUI(int iSound, float volume, float pitch) {
             char tryP[512];
             snprintf(tryP, 512, "%s%s%s%s", base.c_str(), root, szIdentifier,
                      ext);
-            if (PlatformFileIO.exists(tryP)) {
+            if (PlatformFilesystem.exists(tryP)) {
                 strncpy(finalPath, tryP, 511);
                 found = true;
                 break;
@@ -341,12 +334,12 @@ int SoundEngine::getMusicID(int iDomain) {
     }
 }
 
-int SoundEngine::getMusicID(const std::wstring& name) {
+int SoundEngine::getMusicID(const std::string& name) {
     int iCD = 0;
     for (size_t i = 0; i < 12; i++) {
-        std::wstring fileNameW = stws(m_szStreamFileA[i + eStream_CD_1]);
+        std::string fileName = m_szStreamFileA[i + eStream_CD_1];
 
-        if (name == fileNameW) {
+        if (name == fileName) {
             iCD = static_cast<int>(i);
             break;
         }
@@ -354,7 +347,7 @@ int SoundEngine::getMusicID(const std::wstring& name) {
     return iCD + m_iStream_CD_1;
 }
 
-void SoundEngine::playStreaming(const std::wstring& name, float x, float y,
+void SoundEngine::playStreaming(const std::string& name, float x, float y,
                                 float z, float volume, float pitch,
                                 bool bMusicDelay) {
     m_StreamingAudioInfo.x = x;
@@ -452,7 +445,7 @@ void SoundEngine::playMusicTick() {
                 return;
             }
             if (m_musicID != -1) {
-                std::string base = PlatformFileIO.getBasePath().string() + "/";
+                std::string base = PlatformFilesystem.getBasePath().string() + "/";
                 bool isCD = (m_musicID >= m_iStream_CD_1);
                 const char* folder = isCD ? "cds/" : "music/";
                 const char* track = m_szStreamFileA[m_musicID];
@@ -467,13 +460,13 @@ void SoundEngine::playMusicTick() {
                         // try with folder prefix (music/ or cds/)
                         snprintf(m_szStreamName, sizeof(m_szStreamName), "%s%s%s%s%s", base.c_str(), r, folder,
                                  track, e);
-                        if (PlatformFileIO.exists(m_szStreamName)) {
+                        if (PlatformFilesystem.exists(m_szStreamName)) {
                             found = true;
                             break;
                         }
                         // try without folder prefix
                         snprintf(m_szStreamName, sizeof(m_szStreamName), "%s%s%s%s", base.c_str(), r, track, e);
-                        if (PlatformFileIO.exists(m_szStreamName)) {
+                        if (PlatformFilesystem.exists(m_szStreamName)) {
                             found = true;
                             break;
                         }
@@ -1201,7 +1194,7 @@ void SoundEngine::destroy() {}
 #if defined(_DEBUG)
 void SoundEngine::GetSoundName(char* szSoundName, int iSound) {
     strcpy((char*)szSoundName, "Minecraft/");
-    std::wstring name = wchSoundNames[iSound];
+    std::string name = wchSoundNames[iSound];
     char* SoundName = (char*)ConvertSoundPathToName(name);
     strcat((char*)szSoundName, SoundName);
 }
@@ -1224,7 +1217,7 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
     /*	// if we are already playing loads of this sounds ignore this one
     if(CurrentSoundsPlaying[iSound+eSFX_MAX]>MAX_SAME_SOUNDS_PLAYING)
     {
-    // 		std::wstring name = wchSoundNames[iSound];
+    // 		std::string name = wchSoundNames[iSound];
     // 		char *SoundName = (char *)ConvertSoundPathToName(name);
     // 		app.DebugPrintf("Too many %s sounds playing!\n",SoundName);
     return;
@@ -1236,9 +1229,9 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
     strcpy((char*)szSoundName, "Minecraft/");
 
 #if defined(DISTORTION_TEST)
-    std::wstring name = wchSoundNames[eSoundType_MOB_ENDERDRAGON_GROWL];
+    std::string name = wchSoundNames[eSoundType_MOB_ENDERDRAGON_GROWL];
 #else
-    std::wstring name = wchSoundNames[iSound];
+    std::string name = wchSoundNames[iSound];
 #endif
 
     char* SoundName = (char*)ConvertSoundPathToName(name);
@@ -1272,7 +1265,7 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume,
 /////////////////////////////////////////////
 void SoundEngine::playUI(int iSound, float volume, float pitch) {
     U8 szSoundName[256];
-    std::wstring name;
+    std::string name;
     // we have some game sounds played as UI sounds...
     // Not the best way to do this, but it seems to only be the portal sounds
 
@@ -1331,7 +1324,7 @@ void SoundEngine::playUI(int iSound, float volume, float pitch) {
 //	playStreaming
 //
 /////////////////////////////////////////////
-void SoundEngine::playStreaming(const std::wstring& name, float x, float y,
+void SoundEngine::playStreaming(const std::string& name, float x, float y,
                                 float z, float volume, float pitch,
                                 bool bMusicDelay) {
     // This function doesn't actually play a streaming sound, just sets states
@@ -1462,15 +1455,15 @@ void SoundEngine::playMusicUpdate() {
                         m_MusicType = eMusicType_Game;
                         m_StreamingAudioInfo.bIs3D = false;
 
-                        std::wstring& wstrSoundName =
+                        std::string& wstrSoundName =
                             dlcAudioFile->GetSoundName(m_musicID);
                         char szName[255];
-                        wcstombs(szName, wstrSoundName.c_str(), 255);
+                        strncpy(szName, wstrSoundName.c_str(), 255);
 
                         std::string strFile =
                             "TPACK:\\Data\\" + string(szName) + ".binka";
                         std::string mountedPath =
-                            StorageManager.GetMountedPath(strFile);
+                            PlatformStorage.GetMountedPath(strFile);
                         strcpy(m_szStreamName, mountedPath.c_str());
                     } else {
                         SetIsPlayingStreamingGameMusic(false);
@@ -1508,7 +1501,7 @@ void SoundEngine::playMusicUpdate() {
                     strcat((char*)m_szStreamName, ".binka");
                 }
 
-                // std::wstring name =
+                // std::string name =
                 // m_szStreamFileA[m_musicID];char*SoundName=(char
                 // *)ConvertSoundPathToName(name);strcat((char
                 // *)szStreamName,SoundName);
@@ -1910,14 +1903,14 @@ float SoundEngine::getMasterMusicVolume() {
         return m_MasterMusicVolume;
     }
 }
-void SoundEngine::add(const std::wstring& name, File* file) {}
+void SoundEngine::add(const std::string& name, File* file) {}
 
-void SoundEngine::addMusic(const std::wstring& name, File* file) {}
-void SoundEngine::addStreaming(const std::wstring& name, File* file) {}
+void SoundEngine::addMusic(const std::string& name, File* file) {}
+void SoundEngine::addStreaming(const std::string& name, File* file) {}
 
 bool SoundEngine::isStreamingWavebankReady() { return true; }
 // This is unused by the linux version, it'll need to be changed
-char* SoundEngine::ConvertSoundPathToName(const std::wstring& name,
+char* SoundEngine::ConvertSoundPathToName(const std::string& name,
                                           bool bConvertSpaces) {
     return nullptr;
 }

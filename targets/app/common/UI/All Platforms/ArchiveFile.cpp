@@ -7,7 +7,7 @@
 
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "platform/PlatformServices.h"
+#include "platform/fs/fs.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/DataInputStream.h"
@@ -30,7 +30,7 @@ void ArchiveFile::_readHeader(DataInputStream* dis) {
             meta->isCompressed = false;
 
         m_index.insert(
-            std::pair<std::wstring, PMetaData>(meta->filename, meta));
+            std::pair<std::string, PMetaData>(meta->filename, meta));
     }
 }
 
@@ -39,9 +39,7 @@ ArchiveFile::ArchiveFile(File file) {
     m_sourcefile = file;
     app.DebugPrintf("Loading archive file...\n");
 #if !defined(_CONTENT_PACKAGE)
-    char buf[256];
-    wcstombs(buf, file.getPath().c_str(), 256);
-    app.DebugPrintf("archive file - %s\n", buf);
+    app.DebugPrintf("archive file - %s\n", file.getPath().c_str());
 #endif
 
     if (!file.exists()) {
@@ -75,8 +73,8 @@ ArchiveFile::ArchiveFile(File file) {
 
 ArchiveFile::~ArchiveFile() { delete m_cachedData; }
 
-std::vector<std::wstring>* ArchiveFile::getFileList() {
-    std::vector<std::wstring>* out = new std::vector<std::wstring>();
+std::vector<std::string>* ArchiveFile::getFileList() {
+    std::vector<std::string>* out = new std::vector<std::string>();
 
     for (auto it = m_index.begin(); it != m_index.end(); it++)
 
@@ -85,24 +83,24 @@ std::vector<std::wstring>* ArchiveFile::getFileList() {
     return out;
 }
 
-bool ArchiveFile::hasFile(const std::wstring& filename) {
+bool ArchiveFile::hasFile(const std::string& filename) {
     return m_index.find(filename) != m_index.end();
 }
 
-int ArchiveFile::getFileSize(const std::wstring& filename) {
+int ArchiveFile::getFileSize(const std::string& filename) {
     return hasFile(filename) ? m_index.at(filename)->filesize : -1;
 }
 
-std::vector<uint8_t> ArchiveFile::getFile(const std::wstring& filename) {
+std::vector<uint8_t> ArchiveFile::getFile(const std::string& filename) {
     std::vector<uint8_t> out;
     auto it = m_index.find(filename);
 
     if (it == m_index.end()) {
         app.DebugPrintf("Couldn't find file in archive\n");
-        app.DebugPrintf("Failed to find file '%ls' in archive\n",
+        app.DebugPrintf("Failed to find file '%s' in archive\n",
                         filename.c_str());
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
         app.FatalLoadError();
     } else {
@@ -117,11 +115,11 @@ std::vector<uint8_t> ArchiveFile::getFile(const std::wstring& filename) {
         std::uint8_t* pbData = new std::uint8_t[fileSize == 0 ? 1 : fileSize];
         out = std::vector<uint8_t>(pbData, pbData + fileSize);
         auto readResult =
-            PlatformFileIO.readFileSegment(
+            PlatformFilesystem.readFileSegment(
                 m_sourcefile.getPath(), static_cast<std::size_t>(data->ptr),
                 out.data(), static_cast<std::size_t>(data->filesize));
 
-        if (readResult.status != IPlatformFileIO::ReadStatus::Ok) {
+        if (readResult.status != IPlatformFilesystem::ReadStatus::Ok) {
             app.DebugPrintf("Failed to read archive file segment\n");
             app.FatalLoadError();
         }

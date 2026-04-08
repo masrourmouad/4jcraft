@@ -4,9 +4,8 @@
 #include <vector>
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
@@ -28,14 +27,14 @@ UIScene_EULA::UIScene_EULA(int iPad, void* initData, UILayer* parentLayer)
 
     m_buttonConfirm.init(app.GetString(IDS_TOOLTIPS_ACCEPT), eControl_Confirm);
 
-    std::wstring EULA = L"";
+    std::string EULA = "";
 
-    std::vector<std::wstring> paragraphs;
+    std::vector<std::string> paragraphs;
     int lastIndex = 0;
-    for (int index = EULA.find(L"\r\n", lastIndex, 2);
-         index != std::wstring::npos;
-         index = EULA.find(L"\r\n", lastIndex, 2)) {
-        paragraphs.push_back(EULA.substr(lastIndex, index - lastIndex) + L" ");
+    for (int index = EULA.find("\r\n", lastIndex, 2);
+         index != std::string::npos;
+         index = EULA.find("\r\n", lastIndex, 2)) {
+        paragraphs.push_back(EULA.substr(lastIndex, index - lastIndex) + " ");
         lastIndex = index + 2;
     }
     paragraphs.push_back(EULA.substr(lastIndex, EULA.length() - lastIndex));
@@ -46,7 +45,7 @@ UIScene_EULA::UIScene_EULA(int iPad, void* initData, UILayer* parentLayer)
 
     // 4J-PB - If we have a signed in user connected, let's get the DLC now
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-        if ((InputManager.IsPadConnected(i) || ProfileManager.IsSignedIn(i))) {
+        if ((PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))) {
             if (!app.DLCInstallProcessCompleted() && !app.DLCInstallPending()) {
                 app.StartInstallDLCProcess(i);
                 break;
@@ -64,7 +63,7 @@ UIScene_EULA::~UIScene_EULA() {
     m_parentLayer->removeComponent(eUIComponent_Logo);
 }
 
-std::wstring UIScene_EULA::getMoviePath() { return L"EULA"; }
+std::string UIScene_EULA::getMoviePath() { return "EULA"; }
 
 void UIScene_EULA::updateTooltips() {
     ui.SetTooltips(DEFAULT_XUI_MENU_USER, IDS_TOOLTIPS_SELECT);

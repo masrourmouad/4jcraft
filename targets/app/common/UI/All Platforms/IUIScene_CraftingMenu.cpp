@@ -7,16 +7,13 @@
 #include <string>
 #include <vector>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
-#include "minecraft/GameEnums.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/player/LocalPlayer.h"
@@ -28,6 +25,8 @@
 #include "minecraft/world/item/crafting/Recipes.h"
 #include "minecraft/world/item/crafting/ShapedRecipy.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
 
 Recipy::_eGroupType IUIScene_CraftingMenu::m_GroupTypeMapping4GridA
@@ -45,14 +44,14 @@ Recipy::_eGroupType IUIScene_CraftingMenu::m_GroupTypeMapping9GridA
         Recipy::eGroupType_Decoration,
 };
 
-const wchar_t* IUIScene_CraftingMenu::m_GroupIconNameA[m_iMaxGroup3x3] = {
-    L"Structures",  // Recipy::eGroupType_Structure,
-    L"Tools",       // Recipy::eGroupType_Tool,
-    L"Food",        // Recipy::eGroupType_Food,
-    L"Armour",      // Recipy::eGroupType_Armour,
-    L"Mechanisms",  // Recipy::eGroupType_Mechanism,
-    L"Transport",   // Recipy::eGroupType_Transport,
-    L"Decoration",  // Recipy::eGroupType_Decoration,
+const char* IUIScene_CraftingMenu::m_GroupIconNameA[m_iMaxGroup3x3] = {
+    "Structures",  // Recipy::eGroupType_Structure,
+    "Tools",       // Recipy::eGroupType_Tool,
+    "Food",        // Recipy::eGroupType_Food,
+    "Armour",      // Recipy::eGroupType_Armour,
+    "Mechanisms",  // Recipy::eGroupType_Mechanism,
+    "Transport",   // Recipy::eGroupType_Transport,
+    "Decoration",  // Recipy::eGroupType_Decoration,
 };
 
 IUIScene_CraftingMenu::_eGroupTab
@@ -121,7 +120,7 @@ IUIScene_CraftingMenu::IUIScene_CraftingMenu() {
     m_iIngredientsC = 0;
 }
 
-const wchar_t* IUIScene_CraftingMenu::GetGroupNameText(int iGroupType) {
+const char* IUIScene_CraftingMenu::GetGroupNameText(int iGroupType) {
     switch (iGroupType) {
         case ShapedRecipy::eGroupType_Tool:
             return app.GetString(IDS_GROUPNAME_TOOLS);
@@ -199,7 +198,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
                 // Force a make if the debug is on
                 if (app.DebugSettingsOn() &&
                     app.GetGameSettingsDebugMask(
-                        ProfileManager.GetPrimaryPad()) &
+                        PlatformProfile.GetPrimaryPad()) &
                         (1L << eDebugSetting_CraftAnything)) {
                     if (CanBeMadeA[m_iCurrentSlotHIndex].iCount != 0) {
                         int iSlot = iVSlotIndexA[m_iCurrentSlotVIndex];
@@ -229,7 +228,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
                         }
                         // play a sound
                         // pMinecraft->soundEngine->playUI(
-                        // L"random.pop", 1.0f, 1.0f);
+                        // "random.pop", 1.0f, 1.0f);
                         ui.PlayUISFX(eSFX_Craft);
                     }
                 } else if (CanBeMadeA[m_iCurrentSlotHIndex].iCount != 0) {
@@ -272,7 +271,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
 
                         // play a sound
                         // pMinecraft->soundEngine->playUI(
-                        // L"random.pop", 1.0f, 1.0f);
+                        // "random.pop", 1.0f, 1.0f);
                         ui.PlayUISFX(eSFX_Craft);
 
                         if (pTempItemInst->id != Item::fireworksCharge_Id &&
@@ -413,7 +412,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
                         }
                     } else {
                         // pMinecraft->soundEngine->playUI(
-                        // L"btn.back", 1.0f, 1.0f);
+                        // "btn.back", 1.0f, 1.0f);
                         ui.PlayUISFX(eSFX_CraftFail);
                     }
                 }
@@ -481,7 +480,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
     // Vita)
     bool bNoScrollSlots = false;
     if (m_bSplitscreen ||
-        (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+        (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
         bNoScrollSlots = true;
     }
 
@@ -642,7 +641,7 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
         {
         if (m_pPlayer->inventory->items[k] != nullptr)
         {
-        std::wstring itemstring=m_pPlayer->inventory->items[k]->toString();
+        std::string itemstring=m_pPlayer->inventory->items[k]->toString();
 
         //printf("--- Player has ");
         OutputDebugStringW(itemstring.c_str());
@@ -666,7 +665,7 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
         // pTempItemInst=pRecipeIngredientsRequired[i].pRecipy->assemble(nullptr);
         // 			if (pTempItemInst != nullptr)
         // 			{
-        // 				std::wstring
+        // 				std::string
         // itemstring=pTempItemInst->toString();
         //
         // 				printf("Recipe [%d] = ",i);
@@ -876,7 +875,8 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
                     } else {
                         app.DebugPrintf("Need more H slots - ");
 #if !defined(_CONTENT_PACKAGE)
-                        OutputDebugStringW(
+                        fprintf(
+                            stderr,
                             app.GetString(pTempItemInst->getDescriptionId()));
 #endif
                         app.DebugPrintf("\n");
@@ -907,7 +907,7 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
         unsigned int uiAlpha;
 
         if (app.DebugSettingsOn() &&
-            app.GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
+            app.GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()) &
                 (1L << eDebugSetting_CraftAnything)) {
             uiAlpha = 31;
         } else {
@@ -972,7 +972,7 @@ void IUIScene_CraftingMenu::UpdateHighlight() {
 
         // special case for the torch coal/charcoal
         int id = pTempItemInstAdditional->getDescriptionId();
-        const wchar_t* itemstring;
+        const char* itemstring;
 
         switch (id) {
             case IDS_TILE_TORCH: {
@@ -1000,7 +1000,7 @@ void IUIScene_CraftingMenu::UpdateHighlight() {
 
         setItemText(itemstring);
     } else {
-        setItemText(L"");
+        setItemText("");
     }
     UpdateDescriptionText(bCanBeMade);
     DisplayIngredients();
@@ -1035,7 +1035,7 @@ void IUIScene_CraftingMenu::UpdateVerticalSlots() {
         // splits & Vita)
         bool bNoScrollSlots = false;
         if (m_bSplitscreen ||
-            (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+            (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
             bNoScrollSlots = true;
         }
 
@@ -1054,7 +1054,7 @@ void IUIScene_CraftingMenu::UpdateVerticalSlots() {
             unsigned int uiAlpha;
 
             if (app.DebugSettingsOn() &&
-                app.GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
+                app.GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()) &
                     (1L << eDebugSetting_CraftAnything)) {
                 uiAlpha = 31;
             } else {
@@ -1171,7 +1171,7 @@ void IUIScene_CraftingMenu::DisplayIngredients() {
         setCraftingOutputSlotItem(getPad(), pTempItemInst);
 
         if (app.DebugSettingsOn() &&
-            app.GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
+            app.GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()) &
                 (1L << eDebugSetting_CraftAnything)) {
             setCraftingOutputSlotRedBox(false);
         } else {
@@ -1212,7 +1212,7 @@ void IUIScene_CraftingMenu::DisplayIngredients() {
                     // recipe
                     if (app.DebugSettingsOn() &&
                         app.GetGameSettingsDebugMask(
-                            ProfileManager.GetPrimaryPad()) &
+                            PlatformProfile.GetPrimaryPad()) &
                             (1L << eDebugSetting_CraftAnything)) {
                         setIngredientSlotRedBox(index, false);
                     } else {
@@ -1308,34 +1308,34 @@ void IUIScene_CraftingMenu::UpdateDescriptionText(bool bCanBeMade) {
 
         if (iIDSString >= 0) {
             // this is an html control now, so set the font size and colour
-            // std::wstring wsText=app.GetString(iIDSString);
-            std::wstring wsText =
+            // std::string wsText=app.GetString(iIDSString);
+            std::string wsText =
                 app.FormatHTMLString(getPad(), app.GetString(iIDSString));
 
             // 12 for splitscreen, 14 for normal
             EHTMLFontSize size = eHTMLSize_Normal;
-            if (m_bSplitscreen ||
-                (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+            if (m_bSplitscreen || (!PlatformRenderer.IsHiDef() &&
+                                   !PlatformRenderer.IsWidescreen())) {
                 size = eHTMLSize_Splitscreen;
             }
-            wchar_t startTags[64];
-            swprintf(startTags, 64, L"<font color=\"#%08x\"><P ALIGN=LEFT>",
+            char startTags[64];
+            snprintf(startTags, 64, "<font color=\"#%08x\"><P ALIGN=LEFT>",
                      app.GetHTMLColour(eHTMLColor_Black));
-            wsText = startTags + wsText + L"</P>";
+            wsText = startTags + wsText + "</P>";
 
             setDescriptionText(wsText.c_str());
         } else {
             /// Missing string!
 #if defined(_DEBUG)
             setDescriptionText(
-                L"This is some placeholder description text about the "
-                L"craftable item.");
+                "This is some placeholder description text about the "
+                "craftable item.");
 #else
-            setDescriptionText(L"");
+            setDescriptionText("");
 #endif
         }
     } else {
-        setDescriptionText(L"");
+        setDescriptionText("");
     }
 }
 

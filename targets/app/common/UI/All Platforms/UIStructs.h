@@ -6,7 +6,7 @@
 #include <cstring>
 #include <functional>
 
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "app/common/App_Defines.h"
 #include "UIEnums.h"
 #include "platform/C4JThread.h"
@@ -81,7 +81,7 @@ typedef struct _EnchantingScreenInput {
     int z;
     int iPad;
     bool bSplitscreen;
-    std::wstring name;
+    std::string name;
 } EnchantingScreenInput;
 
 // Furnace
@@ -276,7 +276,7 @@ typedef struct _LaunchMoreOptionsMenuInitData {
 
     uint32_t dwTexturePack;
 
-    std::wstring seed;
+    std::string seed;
     int worldSize;
     bool bDisableSaving;
 
@@ -312,7 +312,7 @@ typedef struct _LaunchMoreOptionsMenuInitData {
         dwTexturePack = 0;
 
         worldSize = 3;
-        seed = L"";
+        seed = "";
         bDisableSaving = false;
 
         currentWorldSize = e_worldSize_Unknown;
@@ -352,8 +352,8 @@ class UIScene;
 class Tutorial;
 typedef struct _TutorialPopupInfo {
     UIScene* interactScene;
-    const wchar_t* desc;
-    const wchar_t* title;
+    const char* desc;
+    const char* title;
     int icon;
     int iAuxVal /* = 0 */;
     bool isFoil /* = false */;
@@ -363,8 +363,8 @@ typedef struct _TutorialPopupInfo {
 
     _TutorialPopupInfo() {
         interactScene = nullptr;
-        desc = L"";
-        title = L"";
+        desc = "";
+        title = "";
         icon = -1;
         iAuxVal = 0;
         isFoil = false;
@@ -383,7 +383,7 @@ typedef struct _SignInInfo {
 
 // Credits
 struct SCreditTextItemDef {
-    const wchar_t* m_Text;  // Should contain string, optionally with %s to add
+    const char* m_Text;  // Should contain string, optionally with %s to add
                             // in translated string ... e.g. "Andy West - %s"
     int m_iStringID[2];  // May be NO_TRANSLATED_STRING if we do not require to
                          // add any translated string.
@@ -397,11 +397,11 @@ typedef struct _MessageBoxInfo {
     uint32_t* uiOptionA;
     uint32_t uiOptionC;
     uint32_t dwPad;
-    int (*Func)(void*, int, const C4JStorage::EMessageResult);
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult);
     void* lpParam;
     // C4JStringTable *pStringTable; // 4J Stu - We don't need this for our
     // internal message boxes
-    wchar_t* pwchFormatString;
+    char* pwchFormatString;
     unsigned int dwFocusButton;
 } MessageBoxInfo;
 

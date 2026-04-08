@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
@@ -26,7 +26,7 @@ private:
         eControl_COUNT
     };
 
-    int (*m_Func)(void*, int, const C4JStorage::EMessageResult);
+    int (*m_Func)(void*, int, const IPlatformStorage::EMessageResult);
     void* m_lpParam;
     int m_buttonCount;
 
@@ -42,8 +42,8 @@ private:
     UI_MAP_ELEMENT(m_labelTitle, "Title")
     UI_MAP_ELEMENT(m_labelContent, "Content")
 
-    UI_MAP_NAME(m_funcInit, L"Init")
-    UI_MAP_NAME(m_funcAutoResize, L"AutoResize")
+    UI_MAP_NAME(m_funcInit, "Init")
+    UI_MAP_NAME(m_funcAutoResize, "AutoResize")
     UI_END_MAP_ELEMENTS_AND_NAMES()
 public:
     UIScene_MessageBox(int iPad, void* initData, UILayer* parentLayer);
@@ -58,7 +58,7 @@ public:
 
 protected:
     // TODO: This should be pure virtual in this class
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
     virtual void updateTooltips();
 

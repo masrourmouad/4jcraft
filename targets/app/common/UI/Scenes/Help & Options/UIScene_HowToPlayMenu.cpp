@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include "platform/InputActions.h"
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
@@ -81,11 +80,11 @@ UIScene_HowToPlayMenu::UIScene_HowToPlayMenu(int iPad, void* initData,
     doHorizontalResizeCheck();
 }
 
-std::wstring UIScene_HowToPlayMenu::getMoviePath() {
+std::string UIScene_HowToPlayMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"HowToPlayMenuSplit";
+        return "HowToPlayMenuSplit";
     } else {
-        return L"HowToPlayMenu";
+        return "HowToPlayMenu";
     }
 }
 

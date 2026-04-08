@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/iggy.h"
@@ -21,7 +21,7 @@ private:
 protected:
     IggyName m_funcShowPanoramaDay;
     UI_BEGIN_MAP_ELEMENTS_AND_NAMES(UIScene)
-    UI_MAP_NAME(m_funcShowPanoramaDay, L"ShowPanoramaDay");
+    UI_MAP_NAME(m_funcShowPanoramaDay, "ShowPanoramaDay");
     UI_END_MAP_ELEMENTS_AND_NAMES()
 
 public:
@@ -29,7 +29,7 @@ public:
 
 protected:
     // TODO: This should be pure virtual in this class
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
 public:
     virtual EUIScene getSceneType() { return eUIComponent_Panorama; }
@@ -44,7 +44,7 @@ public:
 
     // RENDERING
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewport);
+                        IPlatformRenderer::eViewportType viewport);
 
 private:
     void setPanorama(bool isDay);

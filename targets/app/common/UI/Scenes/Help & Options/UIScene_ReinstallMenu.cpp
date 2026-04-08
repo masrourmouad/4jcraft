@@ -1,7 +1,6 @@
 
 #include "UIScene_ReinstallMenu.h"
 
-#include "platform/InputActions.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/LinuxGame.h"
@@ -31,11 +30,11 @@ UIScene_ReinstallMenu::UIScene_ReinstallMenu(int iPad, void* initData,
 #endif
 }
 
-std::wstring UIScene_ReinstallMenu::getMoviePath() {
+std::string UIScene_ReinstallMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"ReinstallSplit";
+        return "ReinstallSplit";
     } else {
-        return L"ReinstallMenu";
+        return "ReinstallMenu";
     }
 }
 

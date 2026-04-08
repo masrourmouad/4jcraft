@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/linux/LinuxGame.h"
 #include "minecraft/client/BufferedImage.h"
 #include "TextureManager.h"
@@ -16,14 +16,14 @@
 
 #define MAX_MIP_LEVELS 5
 
-Texture::Texture(const std::wstring& name, int mode, int width, int height,
+Texture::Texture(const std::string& name, int mode, int width, int height,
                  int depth, int wrapMode, int format, int minFilter,
                  int magFilter, bool mipMap) {
     _init(name, mode, width, height, depth, wrapMode, format, minFilter,
           magFilter, mipMap);
 }
 
-void Texture::_init(const std::wstring& name, int mode, int width, int height,
+void Texture::_init(const std::string& name, int mode, int width, int height,
                     int depth, int wrapMode, int format, int minFilter,
                     int magFilter, bool mipMap) {
     this->name = name;
@@ -89,7 +89,7 @@ void Texture::_init(const std::wstring& name, int mode, int width, int height,
     managerId = TextureManager::getInstance()->createTextureID();
 }
 
-void Texture::_init(const std::wstring& name, int mode, int width, int height,
+void Texture::_init(const std::string& name, int mode, int width, int height,
                     int depth, int wrapMode, int format, int minFilter,
                     int magFilter, BufferedImage* image, bool mipMap) {
     _init(name, mode, width, height, depth, wrapMode, format, minFilter,
@@ -144,14 +144,14 @@ void Texture::_init(const std::wstring& name, int mode, int width, int height,
     }
 }
 
-Texture::Texture(const std::wstring& name, int mode, int width, int height,
+Texture::Texture(const std::string& name, int mode, int width, int height,
                  int wrapMode, int format, int minFilter, int magFilter,
                  BufferedImage* image, bool mipMap) {
     _init(name, mode, width, height, 1, wrapMode, format, minFilter, magFilter,
           image, mipMap);
 }
 
-Texture::Texture(const std::wstring& name, int mode, int width, int height,
+Texture::Texture(const std::string& name, int mode, int width, int height,
                  int depth, int wrapMode, int format, int minFilter,
                  int magFilter, BufferedImage* image, bool mipMap) {
     _init(name, mode, width, height, depth, wrapMode, format, minFilter,
@@ -206,11 +206,11 @@ void Texture::fill(const Rect2i* rect, int color) {
     }
 }
 
-void Texture::writeAsBMP(const std::wstring& name) {
+void Texture::writeAsBMP(const std::string& name) {
     // 4J Don't need
 }
 
-void Texture::writeAsPNG(const std::wstring& filename) {
+void Texture::writeAsPNG(const std::string& filename) {
     // 4J Don't need
 }
 
@@ -529,7 +529,7 @@ int Texture::getWidth() { return width; }
 
 int Texture::getHeight() { return height; }
 
-std::wstring Texture::getName() { return name; }
+std::string Texture::getName() { return name; }
 
 void Texture::setImmediateUpdate(bool immediateUpdate) {
     this->immediateUpdate = immediateUpdate;
@@ -570,37 +570,37 @@ void Texture::updateOnGPU() {
     //}
     // else if(height != 1)
     //{
-    // 4J Added check so we can differentiate between which RenderManager
+    // 4J Added check so we can differentiate between which PlatformRenderer
     // function to call
     if (!m_bInitialised) {
-        RenderManager.TextureSetTextureLevels(m_iMipLevels);  // 4J added
+        PlatformRenderer.TextureSetTextureLevels(m_iMipLevels);  // 4J added
 
-        RenderManager.TextureData(width, height, data[0]->getBuffer(), 0,
-                                  C4JRender::TEXTURE_FORMAT_RxGyBzAw);
+        PlatformRenderer.TextureData(width, height, data[0]->getBuffer(), 0,
+                                  IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw);
 
         if (mipmapped) {
             for (int level = 1; level < m_iMipLevels; level++) {
                 int levelWidth = width >> level;
                 int levelHeight = height >> level;
 
-                RenderManager.TextureData(levelWidth, levelHeight,
+                PlatformRenderer.TextureData(levelWidth, levelHeight,
                                           data[level]->getBuffer(), level,
-                                          C4JRender::TEXTURE_FORMAT_RxGyBzAw);
+                                          IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw);
             }
         }
 
         m_bInitialised = true;
     } else {
-        RenderManager.TextureDataUpdate(0, 0, width, height,
+        PlatformRenderer.TextureDataUpdate(0, 0, width, height,
                                         data[0]->getBuffer(), 0);
 
         if (mipmapped) {
-            if (RenderManager.TextureGetTextureLevels() > 1) {
+            if (PlatformRenderer.TextureGetTextureLevels() > 1) {
                 for (int level = 1; level < m_iMipLevels; level++) {
                     int levelWidth = width >> level;
                     int levelHeight = height >> level;
 
-                    RenderManager.TextureDataUpdate(
+                    PlatformRenderer.TextureDataUpdate(
                         0, 0, levelWidth, levelHeight, data[level]->getBuffer(),
                         level);
                 }

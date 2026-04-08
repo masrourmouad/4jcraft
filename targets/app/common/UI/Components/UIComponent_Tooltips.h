@@ -3,8 +3,7 @@
 #include <string>
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/UIScene.h"
@@ -14,6 +13,7 @@
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
 #include "app/linux/Iggy/include/rrCore.h"
+#include "platform/input/InputConstants.h"
 
 class UILayer;
 
@@ -40,13 +40,13 @@ protected:
         m_funcUpdateLayout;
 
     UI_BEGIN_MAP_ELEMENTS_AND_NAMES(UIScene)
-    UI_MAP_NAME(m_funcSetTooltip, L"SetToolTip")
-    UI_MAP_NAME(m_funcSetOpacity, L"SetOpacity")
-    UI_MAP_NAME(m_funcSetABSwap, L"SetABSwap")
-    UI_MAP_NAME(m_funcUpdateLayout, L"UpdateLayout")
+    UI_MAP_NAME(m_funcSetTooltip, "SetToolTip")
+    UI_MAP_NAME(m_funcSetOpacity, "SetOpacity")
+    UI_MAP_NAME(m_funcSetABSwap, "SetABSwap")
+    UI_MAP_NAME(m_funcUpdateLayout, "UpdateLayout")
     UI_END_MAP_ELEMENTS_AND_NAMES()
 
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
 
     virtual F64 getSafeZoneHalfWidth();
 
@@ -71,7 +71,7 @@ public:
 
     // RENDERING
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewport);
+                        IPlatformRenderer::eViewportType viewport);
 
     virtual void SetTooltipText(unsigned int tooltip, int iTextID);
     virtual void SetEnableTooltips(bool bVal);

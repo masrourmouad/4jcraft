@@ -5,9 +5,8 @@
 
 #include <vector>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_Defines.h"
 #include "app/common/Minecraft_Macros.h"
 #include "app/common/DLC/DLCManager.h"
@@ -34,16 +33,16 @@ class ModelPart;
 // #define SKIN_SELECT_PACK_PLAYER_CUSTOM 1
 #define SKIN_SELECT_MAX_DEFAULTS 2
 
-const wchar_t* UIScene_SkinSelectMenu::wchDefaultNamesA[] = {
-    L"USE LOCALISED VERSION",  // Server selected
-    L"Steve",
-    L"Tennis Steve",
-    L"Tuxedo Steve",
-    L"Athlete Steve",
-    L"Scottish Steve",
-    L"Prisoner Steve",
-    L"Cyclist Steve",
-    L"Boxer Steve",
+const char* UIScene_SkinSelectMenu::wchDefaultNamesA[] = {
+    "USE LOCALISED VERSION",  // Server selected
+    "Steve",
+    "Tennis Steve",
+    "Tuxedo Steve",
+    "Athlete Steve",
+    "Scottish Steve",
+    "Prisoner Steve",
+    "Cyclist Steve",
+    "Boxer Steve",
 };
 
 UIScene_SkinSelectMenu::UIScene_SkinSelectMenu(int iPad, void* initData,
@@ -63,8 +62,8 @@ UIScene_SkinSelectMenu::UIScene_SkinSelectMenu(int iPad, void* initData,
 
     m_originalSkinId = app.GetPlayerSkinId(iPad);
     m_currentSkinPath = app.GetPlayerSkinName(iPad);
-    m_selectedSkinPath = L"";
-    m_selectedCapePath = L"";
+    m_selectedSkinPath = "";
+    m_selectedCapePath = "";
     m_vAdditionalSkinBoxes = nullptr;
 
     m_bSlidingSkins = false;
@@ -96,12 +95,12 @@ UIScene_SkinSelectMenu::UIScene_SkinSelectMenu(int iPad, void* initData,
     m_characters[eCharacter_Previous4].SetFacing(
         UIControl_PlayerSkinPreview::e_SkinPreviewFacing_Right);
 
-    m_labelSkinName.init(L"");
-    m_labelSkinOrigin.init(L"");
+    m_labelSkinName.init("");
+    m_labelSkinOrigin.init("");
 
-    m_leftLabel = L"";
-    m_centreLabel = L"";
-    m_rightLabel = L"";
+    m_leftLabel = "";
+    m_centreLabel = "";
+    m_rightLabel = "";
 
     // block input if we're waiting for DLC to install. The end of dlc mounting
     // custom message will fill the save list
@@ -157,11 +156,11 @@ void UIScene_SkinSelectMenu::updateComponents() {
     m_parentLayer->showComponent(m_iPad, eUIComponent_Logo, false);
 }
 
-std::wstring UIScene_SkinSelectMenu::getMoviePath() {
+std::string UIScene_SkinSelectMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"SkinSelectMenuSplit";
+        return "SkinSelectMenuSplit";
     } else {
-        return L"SkinSelectMenu";
+        return "SkinSelectMenu";
     }
 }
 
@@ -388,8 +387,8 @@ void UIScene_SkinSelectMenu::InputActionOK(unsigned int iPad) {
         case SKIN_SELECT_PACK_FAVORITES:
             if (app.GetPlayerFavoriteSkinsCount(iPad) > 0) {
                 // get the pack number from the skin id
-                wchar_t chars[256];
-                swprintf(chars, 256, L"dlcskin%08d.png",
+                char chars[256];
+                snprintf(chars, 256, "dlcskin%08d.png",
                          app.GetPlayerFavoriteSkin(iPad, m_skinIndex));
 
                 DLCPack* Pack = app.m_dlcManager.getPackContainingSkin(chars);
@@ -427,7 +426,7 @@ void UIScene_SkinSelectMenu::InputActionOK(unsigned int iPad) {
                         uiIDA[0] = IDS_OK;
 
                         // We need to upsell the full version
-                        if (ProfileManager.IsGuest(iPad)) {
+                        if (PlatformProfile.IsGuest(iPad)) {
                             // can't buy
                             ui.RequestAlertMessage(IDS_PRO_GUESTPROFILE_TITLE,
                                                    IDS_PRO_GUESTPROFILE_TEXT,
@@ -500,7 +499,7 @@ void UIScene_SkinSelectMenu::InputActionOK(unsigned int iPad) {
 }
 
 void UIScene_SkinSelectMenu::customDraw(IggyCustomDrawCallbackRegion* region) {
-    // 4jcraft: fuck wchar_t
+    // 4jcraft: fuck char
     int characterId = -1;
     if (region->name != nullptr &&
         std::char_traits<char16_t>::length(region->name) > 9 &&
@@ -528,7 +527,7 @@ void UIScene_SkinSelectMenu::customDraw(IggyCustomDrawCallbackRegion* region) {
         // %d, stencil write= %d\n", region->stencil_func_mask,
         // region->stencil_func_ref, region->stencil_write_mask);
         if (region->stencil_func_ref != 0)
-            RenderManager.StateSetStencil(GL_EQUAL, region->stencil_func_ref,
+            PlatformRenderer.StateSetStencil(GL_EQUAL, region->stencil_func_ref,
                                           region->stencil_func_mask,
                                           region->stencil_write_mask);
         m_characters[characterId].render(region);
@@ -541,8 +540,8 @@ void UIScene_SkinSelectMenu::customDraw(IggyCustomDrawCallbackRegion* region) {
 void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
     bool showPrevious = false, showNext = false;
     int previousIndex = 0, nextIndex = 0;
-    std::wstring skinName = L"";
-    std::wstring skinOrigin = L"";
+    std::string skinName = "";
+    std::string skinOrigin = "";
     bool bSkinIsFree = false;
     bool bLicensed = false;
     DLCSkinFile* skinFile = nullptr;
@@ -582,8 +581,8 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
         m_characters[eCharacter_Current].setVisible(true);
         m_controlSkinNamePlate.setVisible(true);
     } else {
-        m_selectedSkinPath = L"";
-        m_selectedCapePath = L"";
+        m_selectedSkinPath = "";
+        m_selectedCapePath = "";
         m_vAdditionalSkinBoxes = nullptr;
 
         switch (m_packIndex) {
@@ -610,8 +609,8 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
 
                 if (app.GetPlayerFavoriteSkinsCount(m_iPad) > 0) {
                     // get the pack number from the skin id
-                    wchar_t chars[256];
-                    swprintf(chars, 256, L"dlcskin%08d.png",
+                    char chars[256];
+                    snprintf(chars, 256, "dlcskin%08d.png",
                              app.GetPlayerFavoriteSkin(m_iPad, m_skinIndex));
 
                     Pack = app.m_dlcManager.getPackContainingSkin(chars);
@@ -684,10 +683,10 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
     nextIndex = getNextSkinIndex(m_skinIndex);
     previousIndex = getPreviousSkinIndex(m_skinIndex);
 
-    std::wstring otherSkinPath = L"";
-    std::wstring otherCapePath = L"";
+    std::string otherSkinPath = "";
+    std::string otherCapePath = "";
     std::vector<SKIN_BOX*>* othervAdditionalSkinBoxes = nullptr;
-    wchar_t chars[256];
+    char chars[256];
 
     // turn off all displays
     for (unsigned int i = eCharacter_Current + 1; i < eCharacter_COUNT; ++i) {
@@ -731,8 +730,8 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
                 othervAdditionalSkinBoxes = skinFile->getAdditionalBoxes();
                 backupTexture = TN_MOB_CHAR;
             } else {
-                otherSkinPath = L"";
-                otherCapePath = L"";
+                otherSkinPath = "";
+                otherCapePath = "";
                 othervAdditionalSkinBoxes = nullptr;
                 switch (m_packIndex) {
                     case SKIN_SELECT_PACK_DEFAULT:
@@ -741,8 +740,8 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
                     case SKIN_SELECT_PACK_FAVORITES:
                         if (uiCurrentFavoriteC > 0) {
                             // get the pack number from the skin id
-                            swprintf(
-                                chars, 256, L"dlcskin%08d.png",
+                            snprintf(
+                                chars, 256, "dlcskin%08d.png",
                                 app.GetPlayerFavoriteSkin(m_iPad, nextIndex));
 
                             Pack =
@@ -799,8 +798,8 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
                 othervAdditionalSkinBoxes = skinFile->getAdditionalBoxes();
                 backupTexture = TN_MOB_CHAR;
             } else {
-                otherSkinPath = L"";
-                otherCapePath = L"";
+                otherSkinPath = "";
+                otherCapePath = "";
                 othervAdditionalSkinBoxes = nullptr;
                 switch (m_packIndex) {
                     case SKIN_SELECT_PACK_DEFAULT:
@@ -809,7 +808,7 @@ void UIScene_SkinSelectMenu::handleSkinIndexChanged() {
                     case SKIN_SELECT_PACK_FAVORITES:
                         if (uiCurrentFavoriteC > 0) {
                             // get the pack number from the skin id
-                            swprintf(chars, 256, L"dlcskin%08d.png",
+                            snprintf(chars, 256, "dlcskin%08d.png",
                                      app.GetPlayerFavoriteSkin(m_iPad,
                                                                previousIndex));
 
@@ -974,10 +973,10 @@ void UIScene_SkinSelectMenu::handlePackIndexChanged() {
             case SKIN_SELECT_PACK_FAVORITES:
                 if (app.GetPlayerFavoriteSkinsCount(m_iPad) > 0) {
                     bool found;
-                    wchar_t chars[256];
+                    char chars[256];
                     // get the pack number from the skin id
-                    swprintf(
-                        chars, 256, L"dlcskin%08d.png",
+                    snprintf(
+                        chars, 256, "dlcskin%08d.png",
                         app.GetPlayerFavoriteSkin(
                             m_iPad, app.GetPlayerFavoriteSkinsPos(m_iPad)));
 
@@ -1103,63 +1102,57 @@ void UIScene_SkinSelectMenu::setCharacterLocked(bool locked) {
                                             m_funcSetCharacterLocked, 1, value);
 }
 
-void UIScene_SkinSelectMenu::setLeftLabel(const std::wstring& label) {
+void UIScene_SkinSelectMenu::setLeftLabel(const std::string& label) {
     if (label.compare(m_leftLabel) != 0) {
         m_leftLabel = label;
-
-        const std::u16string convLabel = wstring_to_u16string(label);
 
         IggyDataValue result;
         IggyDataValue value[1];
 
-        IggyStringUTF16 stringVal;
-        stringVal.string = convLabel.c_str();
-        stringVal.length = convLabel.length();
+        IggyStringUTF8 stringVal;
+        stringVal.string = const_cast<char*>(label.c_str());
+        stringVal.length = label.length();
 
-        value[0].type = IGGY_DATATYPE_string_UTF16;
-        value[0].string16 = stringVal;
+        value[0].type = IGGY_DATATYPE_string_UTF8;
+        value[0].string8 = stringVal;
         IggyResult out = IggyPlayerCallMethodRS(getMovie(), &result,
                                                 IggyPlayerRootPath(getMovie()),
                                                 m_funcSetLeftLabel, 1, value);
     }
 }
 
-void UIScene_SkinSelectMenu::setCentreLabel(const std::wstring& label) {
+void UIScene_SkinSelectMenu::setCentreLabel(const std::string& label) {
     if (label.compare(m_centreLabel) != 0) {
         m_centreLabel = label;
-
-        const std::u16string convLabel = wstring_to_u16string(label);
 
         IggyDataValue result;
         IggyDataValue value[1];
 
-        IggyStringUTF16 stringVal;
-        stringVal.string = convLabel.c_str();
-        stringVal.length = convLabel.length();
+        IggyStringUTF8 stringVal;
+        stringVal.string = const_cast<char*>(label.c_str());
+        stringVal.length = label.length();
 
-        value[0].type = IGGY_DATATYPE_string_UTF16;
-        value[0].string16 = stringVal;
+        value[0].type = IGGY_DATATYPE_string_UTF8;
+        value[0].string8 = stringVal;
         IggyResult out = IggyPlayerCallMethodRS(getMovie(), &result,
                                                 IggyPlayerRootPath(getMovie()),
                                                 m_funcSetCentreLabel, 1, value);
     }
 }
 
-void UIScene_SkinSelectMenu::setRightLabel(const std::wstring& label) {
+void UIScene_SkinSelectMenu::setRightLabel(const std::string& label) {
     if (label.compare(m_rightLabel) != 0) {
         m_rightLabel = label;
-
-        const std::u16string convLabel = wstring_to_u16string(label);
 
         IggyDataValue result;
         IggyDataValue value[1];
 
-        IggyStringUTF16 stringVal;
-        stringVal.string = convLabel.c_str();
-        stringVal.length = convLabel.length();
+        IggyStringUTF8 stringVal;
+        stringVal.string = const_cast<char*>(label.c_str());
+        stringVal.length = label.length();
 
-        value[0].type = IGGY_DATATYPE_string_UTF16;
-        value[0].string16 = stringVal;
+        value[0].type = IGGY_DATATYPE_string_UTF8;
+        value[0].string8 = stringVal;
         IggyResult out = IggyPlayerCallMethodRS(getMovie(), &result,
                                                 IggyPlayerRootPath(getMovie()),
                                                 m_funcSetRightLabel, 1, value);
@@ -1230,12 +1223,12 @@ void UIScene_SkinSelectMenu::showNotOnlineDialog(int iPad) {
 }
 
 int UIScene_SkinSelectMenu::UnlockSkinReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_SkinSelectMenu* pScene = (UIScene_SkinSelectMenu*)pParam;
 
-    if ((result == C4JStorage::EMessage_ResultAccept) &&
-        ProfileManager.IsSignedIn(iPad)) {
-        if (ProfileManager.IsSignedInLive(iPad)) {
+    if ((result == IPlatformStorage::EMessage_ResultAccept) &&
+        PlatformProfile.IsSignedIn(iPad)) {
+        if (PlatformProfile.IsSignedInLive(iPad)) {
         } else  // Is signed in, but not live.
         {
             pScene->showNotOnlineDialog(iPad);
@@ -1287,12 +1280,12 @@ void UIScene_SkinSelectMenu::handleReload() {
     m_currentNavigation = eSkinNavigation_Skin;
     m_currentPackCount = 0;
 
-    m_labelSkinName.init(L"");
-    m_labelSkinOrigin.init(L"");
+    m_labelSkinName.init("");
+    m_labelSkinOrigin.init("");
 
-    m_leftLabel = L"";
-    m_centreLabel = L"";
-    m_rightLabel = L"";
+    m_leftLabel = "";
+    m_centreLabel = "";
+    m_rightLabel = "";
 
     handlePackIndexChanged();
 }

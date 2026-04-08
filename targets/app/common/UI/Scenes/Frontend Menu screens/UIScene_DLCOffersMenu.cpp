@@ -4,8 +4,7 @@
 #include <stdint.h>
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_DLCList.h"
 #include "app/common/UI/Controls/UIControl_HTMLLabel.h"
@@ -35,18 +34,18 @@ UIScene_DLCOffersMenu::UIScene_DLCOffersMenu(int iPad, void* initData,
     // Alert the app the we want to be informed of ethernet connections
     app.SetLiveLinkRequired(true);
 
-    m_bIsSD = !RenderManager.IsHiDef() && !RenderManager.IsWidescreen();
+    m_bIsSD = !PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen();
 
     m_labelOffers.init(app.GetString(IDS_DOWNLOADABLE_CONTENT_OFFERS));
     m_buttonListOffers.init(eControl_OffersList);
-    m_labelHTMLSellText.init(L" ");
-    m_labelPriceTag.init(L" ");
+    m_labelHTMLSellText.init(" ");
+    m_labelPriceTag.init(" ");
 
     m_bHasPurchased = false;
     m_bIsSelected = false;
 
     if (m_loadedResolution == eSceneResolution_1080) {
-        m_labelXboxStore.init(L"");
+        m_labelXboxStore.init("");
     }
 }
 
@@ -59,7 +58,7 @@ UIScene_DLCOffersMenu::~UIScene_DLCOffersMenu() {
 void UIScene_DLCOffersMenu::handleTimerComplete(int id) {}
 
 int UIScene_DLCOffersMenu::ExitDLCOffersMenu(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_DLCOffersMenu* pClass = (UIScene_DLCOffersMenu*)pParam;
 
     ui.NavigateToHomeMenu();  // iPad,eUIScene_MainMenu);
@@ -67,7 +66,7 @@ int UIScene_DLCOffersMenu::ExitDLCOffersMenu(
     return 0;
 }
 
-std::wstring UIScene_DLCOffersMenu::getMoviePath() { return L"DLCOffersMenu"; }
+std::string UIScene_DLCOffersMenu::getMoviePath() { return "DLCOffersMenu"; }
 
 void UIScene_DLCOffersMenu::updateTooltips() {
     int iA = -1;
@@ -187,8 +186,8 @@ void UIScene_DLCOffersMenu::handlePress(F64 controlId, F64 childId) {
             int iIndex = (int)childId;
 
             uint64_t ullIndexA[1];
-            ullIndexA[0] = StorageManager.GetOffer(iIndex).qwOfferID;
-            StorageManager.InstallOffer(1, ullIndexA, nullptr);
+            ullIndexA[0] = PlatformStorage.GetOffer(iIndex).qwOfferID;
+            PlatformStorage.InstallOffer(1, ullIndexA, nullptr);
         } break;
     }
 }

@@ -2,10 +2,9 @@
 #include "app/common/Game.h"
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/storage/storage.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
@@ -25,7 +24,6 @@
 #include "platform/NetTypes.h"
 #include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
-#include "platform/PlatformServices.h"
 #include "java/Class.h"
 #include "java/File.h"
 #include "java/Random.h"
@@ -74,7 +72,7 @@
 #include <utility>
 #include <vector>
 
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/DLC/DLCPack.h"
@@ -121,7 +119,7 @@ Game::Game() {
             "%d\n",
             sizeof(GAME_SETTINGS), GAME_SETTINGS_PROFILE_DATA_BYTES);
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
     }
 
@@ -158,7 +156,7 @@ void Game::DebugPrintf(const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-    OutputDebugStringA(buf);
+    fputs(buf, stderr);
 #endif
 }
 
@@ -170,16 +168,16 @@ void Game::DebugPrintf(int user, const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-    OutputDebugStringA(buf);
+    fputs(buf, stderr);
     if (user == USER_UI) {
         ui.logDebugString(buf);
     }
 #endif
 }
 
-const wchar_t* Game::GetString(int iID) {
-    // return L"Değişiklikler ve Yenilikler";
-    // return L"ÕÕÕÕÖÖÖÖ";
+const char* Game::GetString(int iID) {
+    // return "Değişiklikler ve Yenilikler";
+    // return "ÕÕÕÕÖÖÖÖ";
     return app.m_localizationManager.getString(iID);
 }
 
@@ -235,12 +233,12 @@ void Game::SetAppPaused(bool val) { m_bIsAppPaused = val; }
 
 
 int Game::BannedLevelDialogReturned(
-    void* pParam, int iPad, const C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, const IPlatformStorage::EMessageResult result) {
     Game* pApp = (Game*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
     } else {
-        if (iPad == ProfileManager.GetPrimaryPad()) {
+        if (iPad == PlatformProfile.GetPrimaryPad()) {
             pApp->SetAction(iPad, eAppAction_ExitWorld);
         } else {
             pApp->SetAction(iPad, eAppAction_ExitPlayer);
@@ -253,12 +251,12 @@ int Game::BannedLevelDialogReturned(
 #if defined(_DEBUG_MENUS_ENABLED)
 bool Game::DebugArtToolsOn() {
     return m_debugOptions.debugArtToolsOn(
-        GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()));
+        GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()));
 }
 #endif
 
 void Game::SetDebugSequence(const char* pchSeq) {
-    InputManager.SetDebugSequence(pchSeq, [this]() -> int {
+    PlatformInput.SetDebugSequence(pchSeq, [this]() -> int {
         // printf("sequence matched\n");
         m_debugOptions.setDebugOptions(!m_debugOptions.settingsOn());
 
@@ -308,7 +306,7 @@ int Game::GetLocalPlayerCount(void) {
 // 		 // we only attempt to install the cape once per launch of the
 // game 		 m_bDefaultCapeInstallAttempted=true;
 //
-// 		 std::wstring wTemp=L"Default_Cape.png";
+// 		 std::string wTemp="Default_Cape.png";
 // 		 bool bRes=app.IsFileInMemoryTextures(wTemp);
 // 		 // if the file is not already in the memory textures, then read
 // it from TMS 		 if(!bRes)
@@ -317,10 +315,10 @@ int Game::GetLocalPlayerCount(void) {
 // 			 std::uint32_t dwSize=0;
 // 			 // 4J-PB - out for now for DaveK so he doesn't get the
 // birthday cape #ifdef _CONTENT_PACKAGE
-// C4JStorage::ETMSStatus eTMSStatus;
-// 			 eTMSStatus=StorageManager.ReadTMSFile(ProfileManager.GetPrimaryPad(),C4JStorage::eGlobalStorage_Title,C4JStorage::eTMS_FileType_Graphic,
-// L"Default_Cape.png",&pBuffer, &dwSize);
-// 			 if(eTMSStatus==C4JStorage::ETMSStatus_Idle)
+// IPlatformStorage::ETMSStatus eTMSStatus;
+// 			 eTMSStatus=PlatformStorage.ReadTMSFile(PlatformProfile.GetPrimaryPad(),IPlatformStorage::eGlobalStorage_Title,IPlatformStorage::eTMS_FileType_Graphic,
+// "Default_Cape.png",&pBuffer, &dwSize);
+// 			 if(eTMSStatus==IPlatformStorage::ETMSStatus_Idle)
 // 			 {
 // 				 app.AddMemoryTextureFile(wTemp,pBuffer,dwSize);
 // 			 }
@@ -331,7 +329,7 @@ int Game::GetLocalPlayerCount(void) {
 
 
 //  int Game::DLCReadCallback(void*
-//  pParam,C4JStorage::DLC_FILE_DETAILS *pDLCData)
+//  pParam,IPlatformStorage::DLC_FILE_DETAILS *pDLCData)
 //  {
 //
 //
@@ -440,7 +438,7 @@ void Game::setLevelGenerationOptions(
     m_gameRules.setLevelGenerationOptions(levelGen);
 }
 
-const wchar_t* Game::GetGameRulesString(const std::wstring& key) {
+const char* Game::GetGameRulesString(const std::string& key) {
     return m_gameRules.GetGameRulesString(key);
 }
 
@@ -455,7 +453,7 @@ const wchar_t* Game::GetGameRulesString(const std::wstring& key) {
 
 
 
-std::wstring Game::getEntityName(eINSTANCEOF type) {
+std::string Game::getEntityName(eINSTANCEOF type) {
     switch (type) {
         case eTYPE_WOLF:
             return app.GetString(IDS_WOLF);
@@ -504,7 +502,7 @@ std::wstring Game::getEntityName(eINSTANCEOF type) {
             break;
     };
 
-    return L"";
+    return "";
 }
 
 // m_dwContentTypeA moved to DLCController
@@ -513,18 +511,18 @@ std::wstring Game::getEntityName(eINSTANCEOF type) {
 
 
 
-int32_t Game::RegisterMojangData(wchar_t* pXuidName, PlayerUID xuid,
-                                          wchar_t* pSkin, wchar_t* pCape) {
+int32_t Game::RegisterMojangData(char* pXuidName, PlayerUID xuid,
+                                          char* pSkin, char* pCape) {
     int32_t hr = 0;
     eXUID eTempXuid = eXUID_Undefined;
     MOJANG_DATA* pMojangData = nullptr;
 
     // ignore the names if we don't recognize them
     if (pXuidName != nullptr) {
-        if (wcscmp(pXuidName, L"XUID_NOTCH") == 0) {
+        if (strcmp(pXuidName, "XUID_NOTCH") == 0) {
             eTempXuid =
                 eXUID_Notch;  // might be needed for the apple at some point
-        } else if (wcscmp(pXuidName, L"XUID_DEADMAU5") == 0) {
+        } else if (strcmp(pXuidName, "XUID_DEADMAU5") == 0) {
             eTempXuid = eXUID_Deadmau5;  // Needed for the deadmau5 ears
         } else {
             eTempXuid = eXUID_NoName;
@@ -536,8 +534,8 @@ int32_t Game::RegisterMojangData(wchar_t* pXuidName, PlayerUID xuid,
         memset(pMojangData, 0, sizeof(MOJANG_DATA));
         pMojangData->eXuid = eTempXuid;
 
-        wcsncpy(pMojangData->wchSkin, pSkin, MAX_CAPENAME_SIZE);
-        wcsncpy(pMojangData->wchCape, pCape, MAX_CAPENAME_SIZE);
+        strncpy(pMojangData->wchSkin, pSkin, MAX_CAPENAME_SIZE);
+        strncpy(pMojangData->wchCape, pCape, MAX_CAPENAME_SIZE);
         DLCController::MojangData[xuid] = pMojangData;
     }
 
@@ -548,13 +546,13 @@ MOJANG_DATA* Game::GetMojangDataForXuid(PlayerUID xuid) {
     return DLCController::MojangData[xuid];
 }
 
-int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
+int32_t Game::RegisterConfigValues(char* pType, int iValue) {
     int32_t hr = 0;
 
     // #ifdef 0
     // 	if(pType!=nullptr)
     // 	{
-    // 		if(wcscmp(pType,L"XboxOneTransfer")==0)
+    // 		if(strcmp(pType,"XboxOneTransfer")==0)
     // 		{
     // 			if(iValue>0)
     // 			{
@@ -565,7 +563,7 @@ int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
     // 				app.m_bTransferSavesToXboxOne=false;
     // 			}
     // 		}
-    // 		else if(wcscmp(pType,L"TransferSlotCount")==0)
+    // 		else if(strcmp(pType,"TransferSlotCount")==0)
     // 		{
     // 			app.m_uiTransferSlotC=iValue;
     // 		}
@@ -608,7 +606,7 @@ int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
 
 // AUTOSAVE
 void Game::SetAutosaveTimerTime(void) {
-    int settingValue = GetGameSettings(ProfileManager.GetPrimaryPad(), eGameSetting_Autosave);
+    int settingValue = GetGameSettings(PlatformProfile.GetPrimaryPad(), eGameSetting_Autosave);
     m_saveManager.setAutosaveTimerTime(settingValue);
 }
 
@@ -624,28 +622,28 @@ float Game::getTrialTimer(void) {
 bool Game::IsLocalMultiplayerAvailable() {
     unsigned int connectedControllers = 0;
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-        if (InputManager.IsPadConnected(i) || ProfileManager.IsSignedIn(i))
+        if (PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))
             ++connectedControllers;
     }
 
-    bool available = RenderManager.IsHiDef() && connectedControllers > 1;
+    bool available = PlatformRenderer.IsHiDef() && connectedControllers > 1;
 
     return available;
 
     // Found this in GameNetworkManager?
     // #ifdef 0
     //		iOtherConnectedControllers =
-    // InputManager.GetConnectedGamepadCount();
-    //		if((InputManager.IsPadConnected(userIndex) ||
-    // ProfileManager.IsSignedIn(userIndex)))
+    // PlatformInput.GetConnectedGamepadCount();
+    //		if((PlatformInput.IsPadConnected(userIndex) ||
+    // PlatformProfile.IsSignedIn(userIndex)))
     //		{
     //			--iOtherConnectedControllers;
     //		}
     // #else
     //		for(unsigned int i = 0; i < XUSER_MAX_COUNT; ++i)
     //		{
-    //			if( (i!=userIndex) && (InputManager.IsPadConnected(i) ||
-    // ProfileManager.IsSignedIn(i)) )
+    //			if( (i!=userIndex) && (PlatformInput.IsPadConnected(i) ||
+    // PlatformProfile.IsSignedIn(i)) )
     //			{
     //				iOtherConnectedControllers++;
     //			}
@@ -657,11 +655,11 @@ bool Game::IsLocalMultiplayerAvailable() {
 
 // (moved to manager class)
 
-std::wstring Game::getFilePath(std::uint32_t packId,
-                                        std::wstring filename,
+std::string Game::getFilePath(std::uint32_t packId,
+                                        std::string filename,
                                         bool bAddDataFolder,
-                                        std::wstring mountPoint) {
-    std::wstring path =
+                                        std::string mountPoint) {
+    std::string path =
         getRootPath(packId, true, bAddDataFolder, mountPoint) + filename;
     File f(path);
     if (f.exists()) {
@@ -687,19 +685,19 @@ enum ETitleUpdateTexturePacks {
 };
 
 #if defined(_WINDOWS64)
-std::wstring titleUpdateTexturePackRoot = L"Windows64\\DLC\\";
+std::string titleUpdateTexturePackRoot = "Windows64\\DLC\\";
 #else
-std::wstring titleUpdateTexturePackRoot = L"CU\\DLC\\";
+std::string titleUpdateTexturePackRoot = "CU\\DLC\\";
 #endif
 
-std::wstring Game::getRootPath(std::uint32_t packId,
+std::string Game::getRootPath(std::uint32_t packId,
                                         bool allowOverride, bool bAddDataFolder,
-                                        std::wstring mountPoint) {
-    std::wstring path = mountPoint;
+                                        std::string mountPoint) {
+    std::string path = mountPoint;
     if (allowOverride) {
         switch (packId) {
             case eTUTP_Halloween:
-                path = titleUpdateTexturePackRoot + L"Halloween Texture Pack";
+                path = titleUpdateTexturePackRoot + "Halloween Texture Pack";
                 break;
         };
         File folder(path);
@@ -709,8 +707,8 @@ std::wstring Game::getRootPath(std::uint32_t packId,
     }
 
     if (bAddDataFolder) {
-        return path + L"\\Data\\";
+        return path + "\\Data\\";
     } else {
-        return path + L"\\";
+        return path + "\\";
     }
 }

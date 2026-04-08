@@ -3,9 +3,8 @@
 
 #include <wchar.h>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
@@ -59,20 +58,20 @@ UIScene_SettingsOptionsMenu::UIScene_SettingsOptionsMenu(int iPad,
         m_checkboxMashupWorlds.init(IDS_UNHIDE_MASHUP_WORLDS,
                                     eControl_ShowMashUpWorlds, false);
     } else {
-        // m_checkboxMashupWorlds.init(L"",eControl_ShowMashUpWorlds,false);
+        // m_checkboxMashupWorlds.init("",eControl_ShowMashUpWorlds,false);
         removeControl(&m_checkboxMashupWorlds, true);
         m_bMashUpWorldsUnhideOption = false;
     }
 
     unsigned char ucValue = app.GetGameSettings(m_iPad, eGameSetting_Autosave);
 
-    wchar_t autosaveLabels[9][256];
+    char autosaveLabels[9][256];
     for (unsigned int i = 0; i < 9; ++i) {
         if (i == 0) {
-            swprintf(autosaveLabels[i], 256, L"%ls",
+            snprintf(autosaveLabels[i], 256, "%s",
                      app.GetString(IDS_SLIDER_AUTOSAVE_OFF));
         } else {
-            swprintf(autosaveLabels[i], 256, L"%ls: %d %ls",
+            snprintf(autosaveLabels[i], 256, "%s: %d %s",
                      app.GetString(IDS_SLIDER_AUTOSAVE), i * 15,
                      app.GetString(IDS_MINUTES));
         }
@@ -82,9 +81,9 @@ UIScene_SettingsOptionsMenu::UIScene_SettingsOptionsMenu(int iPad,
                           ucValue);
 
     ucValue = app.GetGameSettings(m_iPad, eGameSetting_Difficulty);
-    wchar_t difficultyLabels[4][256];
+    char difficultyLabels[4][256];
     for (unsigned int i = 0; i < 4; ++i) {
-        swprintf(difficultyLabels[i], 256, L"%ls: %ls",
+        snprintf(difficultyLabels[i], 256, "%s: %s",
                  app.GetString(IDS_SLIDER_DIFFICULTY),
                  app.GetString(m_iDifficultyTitleSettingA[i]));
     }
@@ -92,15 +91,15 @@ UIScene_SettingsOptionsMenu::UIScene_SettingsOptionsMenu(int iPad,
     m_sliderDifficulty.init(difficultyLabels[ucValue], eControl_Difficulty, 0,
                             3, ucValue);
 
-    std::wstring wsText =
+    std::string wsText =
         app.GetString(m_iDifficultySettingA[app.GetGameSettings(
             m_iPad, eGameSetting_Difficulty)]);
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
-    wchar_t startTags[64];
-    swprintf(startTags, 64, L"<font color=\"#%08x\">",
+    char startTags[64];
+    snprintf(startTags, 64, "<font color=\"#%08x\">",
              app.GetHTMLColour(eHTMLColor_White));
     wsText = startTags + wsText;
 
@@ -114,7 +113,7 @@ UIScene_SettingsOptionsMenu::UIScene_SettingsOptionsMenu(int iPad,
     bool bRemoveInGameGamertags = false;
 
     bool bNotInGame = (Minecraft::GetInstance()->level == nullptr);
-    bool bPrimaryPlayer = ProfileManager.GetPrimaryPad() == m_iPad;
+    bool bPrimaryPlayer = PlatformProfile.GetPrimaryPad() == m_iPad;
     if (!bPrimaryPlayer) {
         bRemoveDifficulty = true;
         bRemoveAutosave = true;
@@ -179,11 +178,11 @@ void UIScene_SettingsOptionsMenu::tick() {
     }
 }
 
-std::wstring UIScene_SettingsOptionsMenu::getMoviePath() {
+std::string UIScene_SettingsOptionsMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"SettingsOptionsMenuSplit";
+        return "SettingsOptionsMenuSplit";
     } else {
-        return L"SettingsOptionsMenu";
+        return "SettingsOptionsMenu";
     }
 }
 
@@ -201,7 +200,7 @@ void UIScene_SettingsOptionsMenu::updateComponents() {
 
         if (app.GetLocalPlayerCount() == 1)
             m_parentLayer->showComponent(m_iPad, eUIComponent_Logo,
-                                         RenderManager.IsHiDef());
+                                         PlatformRenderer.IsHiDef());
         else
             m_parentLayer->showComponent(m_iPad, eUIComponent_Logo, false);
     }
@@ -262,20 +261,20 @@ void UIScene_SettingsOptionsMenu::handleReload() {
         // the mash-up option is needed
         m_bMashUpWorldsUnhideOption = true;
     } else {
-        // m_checkboxMashupWorlds.init(L"",eControl_ShowMashUpWorlds,false);
+        // m_checkboxMashupWorlds.init("",eControl_ShowMashUpWorlds,false);
         removeControl(&m_checkboxMashupWorlds, true);
         m_bMashUpWorldsUnhideOption = false;
     }
 
     unsigned char ucValue = app.GetGameSettings(m_iPad, eGameSetting_Autosave);
 
-    wchar_t autosaveLabels[9][256];
+    char autosaveLabels[9][256];
     for (unsigned int i = 0; i < 9; ++i) {
         if (i == 0) {
-            swprintf(autosaveLabels[i], 256, L"%ls",
+            snprintf(autosaveLabels[i], 256, "%s",
                      app.GetString(IDS_SLIDER_AUTOSAVE_OFF));
         } else {
-            swprintf(autosaveLabels[i], 256, L"%ls: %d %ls",
+            snprintf(autosaveLabels[i], 256, "%s: %d %s",
                      app.GetString(IDS_SLIDER_AUTOSAVE), i * 15,
                      app.GetString(IDS_MINUTES));
         }
@@ -286,9 +285,9 @@ void UIScene_SettingsOptionsMenu::handleReload() {
 
     ucValue = app.GetGameSettings(m_iPad, eGameSetting_Difficulty);
 
-    wchar_t difficultyLabels[4][256];
+    char difficultyLabels[4][256];
     for (unsigned int i = 0; i < 4; ++i) {
-        swprintf(difficultyLabels[i], 256, L"%ls: %ls",
+        snprintf(difficultyLabels[i], 256, "%s: %s",
                  app.GetString(IDS_SLIDER_DIFFICULTY),
                  app.GetString(m_iDifficultyTitleSettingA[i]));
     }
@@ -296,15 +295,15 @@ void UIScene_SettingsOptionsMenu::handleReload() {
     m_sliderDifficulty.init(difficultyLabels[ucValue], eControl_Difficulty, 0,
                             3, ucValue);
 
-    std::wstring wsText =
+    std::string wsText =
         app.GetString(m_iDifficultySettingA[app.GetGameSettings(
             m_iPad, eGameSetting_Difficulty)]);
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
-    wchar_t startTags[64];
-    swprintf(startTags, 64, L"<font color=\"#%08x\">",
+    char startTags[64];
+    snprintf(startTags, 64, "<font color=\"#%08x\">",
              app.GetHTMLColour(eHTMLColor_White));
     wsText = startTags + wsText;
 
@@ -318,7 +317,7 @@ void UIScene_SettingsOptionsMenu::handleReload() {
     bool bRemoveInGameGamertags = false;
 
     bool bNotInGame = (Minecraft::GetInstance()->level == nullptr);
-    bool bPrimaryPlayer = ProfileManager.GetPrimaryPad() == m_iPad;
+    bool bPrimaryPlayer = PlatformProfile.GetPrimaryPad() == m_iPad;
     if (!bPrimaryPlayer) {
         bRemoveDifficulty = true;
         bRemoveAutosave = true;
@@ -379,13 +378,13 @@ void UIScene_SettingsOptionsMenu::handleSliderMove(F64 sliderId,
 
             app.SetGameSettings(m_iPad, eGameSetting_Difficulty, value);
 
-            std::wstring wsText = app.GetString(m_iDifficultySettingA[value]);
+            std::string wsText = app.GetString(m_iDifficultySettingA[value]);
             EHTMLFontSize size = eHTMLSize_Normal;
-            if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+            if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
                 size = eHTMLSize_Splitscreen;
             }
-            wchar_t startTags[64];
-            swprintf(startTags, 64, L"<font color=\"#%08x\">",
+            char startTags[64];
+            snprintf(startTags, 64, "<font color=\"#%08x\">",
                      app.GetHTMLColour(eHTMLColor_White));
             wsText = startTags + wsText;
             m_labelDifficultyText.setLabel(wsText.c_str());

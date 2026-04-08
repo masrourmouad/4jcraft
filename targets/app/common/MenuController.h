@@ -5,7 +5,7 @@
 #include <string>
 
 #include "app/common/App_structs.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/storage/storage.h"
 #include "platform/XboxStubs.h"
 
 class Player;
@@ -35,7 +35,7 @@ public:
                           bool bNavigateBack = false);
     bool loadEnchantingMenu(int iPad, std::shared_ptr<Inventory> inventory,
                             int x, int y, int z, Level* level,
-                            const std::wstring& name);
+                            const std::string& name);
     bool loadFurnaceMenu(int iPad, std::shared_ptr<Inventory> inventory,
                          std::shared_ptr<FurnaceTileEntity> furnace);
     bool loadBrewingStandMenu(
@@ -55,7 +55,7 @@ public:
                            Level* level, int x, int y, int z);
     bool loadTradingMenu(int iPad, std::shared_ptr<Inventory> inventory,
                          std::shared_ptr<Merchant> trader, Level* level,
-                         const std::wstring& name);
+                         const std::string& name);
     bool loadHopperMenu(int iPad, std::shared_ptr<Inventory> inventory,
                         std::shared_ptr<HopperTileEntity> hopper);
     bool loadHopperMenu(int iPad, std::shared_ptr<Inventory> inventory,
@@ -97,23 +97,23 @@ public:
 
     // Dialog callbacks
     static int texturePackDialogReturned(void* pParam, int iPad,
-                                         C4JStorage::EMessageResult result);
+                                         IPlatformStorage::EMessageResult result);
     static int fatalErrorDialogReturned(void* pParam, int iPad,
-                                        C4JStorage::EMessageResult result);
+                                        IPlatformStorage::EMessageResult result);
     static int trialOverReturned(void* pParam, int iPad,
-                                 C4JStorage::EMessageResult result);
+                                 IPlatformStorage::EMessageResult result);
     static int unlockFullExitReturned(void* pParam, int iPad,
-                                      C4JStorage::EMessageResult result);
+                                      IPlatformStorage::EMessageResult result);
     static int unlockFullSaveReturned(void* pParam, int iPad,
-                                      C4JStorage::EMessageResult result);
+                                      IPlatformStorage::EMessageResult result);
     static int unlockFullInviteReturned(void* pParam, int iPad,
-                                        C4JStorage::EMessageResult result);
+                                        IPlatformStorage::EMessageResult result);
 
     // Remote save
     static int remoteSaveThreadProc(void* lpParameter);
     static void exitGameFromRemoteSave(void* lpParameter);
     static int exitGameFromRemoteSaveDialogReturned(
-        void* pParam, int iPad, C4JStorage::EMessageResult result);
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
 
     // Image text data
     void getImageTextData(std::uint8_t* imageData, unsigned int imageBytes,

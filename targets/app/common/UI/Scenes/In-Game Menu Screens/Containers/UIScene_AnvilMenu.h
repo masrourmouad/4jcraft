@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/IUIScene_AnvilMenu.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
@@ -52,11 +52,11 @@ protected:
     UI_MAP_ELEMENT(m_textInputAnvil, "AnvilTextInput")
     UI_END_MAP_CHILD_ELEMENTS()
 
-    UI_MAP_NAME(m_funcShowRedCross, L"ShowRedCross")
-    UI_MAP_NAME(m_funcSetCostLabel, L"SetCostLabel")
+    UI_MAP_NAME(m_funcShowRedCross, "ShowRedCross")
+    UI_MAP_NAME(m_funcSetCostLabel, "SetCostLabel")
     UI_END_MAP_ELEMENTS_AND_NAMES()
 
-    virtual std::wstring getMoviePath();
+    virtual std::string getMoviePath();
     virtual void handleReload();
 
     virtual void tick();
@@ -73,10 +73,10 @@ protected:
     virtual UIControl* getSection(ESceneSection eSection);
 
     virtual void handleEditNamePressed();
-    virtual void setEditNameValue(const std::wstring& name);
+    virtual void setEditNameValue(const std::string& name);
     virtual void setEditNameEditable(bool enabled);
     virtual void handleDestroy();
 
-    void setCostLabel(const std::wstring& label, bool canAfford);
+    void setCostLabel(const std::string& label, bool canAfford);
     void showCross(bool show);
 };

@@ -1,6 +1,5 @@
 #include "UIScene_LanguageSelector.h"
 
-#include "platform/InputActions.h"
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
@@ -51,11 +50,11 @@ UIScene_LanguageSelector::UIScene_LanguageSelector(int iPad, void* initData,
     }
 }
 
-std::wstring UIScene_LanguageSelector::getMoviePath() {
+std::string UIScene_LanguageSelector::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1)
-        return L"LanguagesMenuSplit";
+        return "LanguagesMenuSplit";
     else
-        return L"LanguagesMenu";
+        return "LanguagesMenu";
 }
 
 void UIScene_LanguageSelector::updateTooltips() {

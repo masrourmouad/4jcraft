@@ -7,8 +7,8 @@
 #include <memory>
 #include <utility>
 
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
@@ -65,7 +65,7 @@ UIScene_AnvilMenu::UIScene_AnvilMenu(int iPad, void* _initData,
     m_slotListResult.addSlots(AnvilMenu::RESULT_SLOT, 1);
 
     bool expensive = false;
-    std::wstring m_costString = L"";
+    std::string m_costString = "";
 
     if (m_repairMenu->cost > 0) {
         if (m_repairMenu->cost >= 40 &&
@@ -75,9 +75,9 @@ UIScene_AnvilMenu::UIScene_AnvilMenu(int iPad, void* _initData,
         } else if (!m_repairMenu->getSlot(AnvilMenu::RESULT_SLOT)->hasItem()) {
             // Do nothing
         } else {
-            const wchar_t* costString = app.GetString(IDS_REPAIR_COST);
-            wchar_t temp[256];
-            swprintf(temp, 256, costString, m_repairMenu->cost);
+            const char* costString = app.GetString(IDS_REPAIR_COST);
+            char temp[256];
+            snprintf(temp, 256, costString, m_repairMenu->cost);
             m_costString = temp;
             if (!m_repairMenu->getSlot(AnvilMenu::RESULT_SLOT)
                      ->mayPickup(std::dynamic_pointer_cast<Player>(
@@ -95,11 +95,11 @@ UIScene_AnvilMenu::UIScene_AnvilMenu(int iPad, void* _initData,
     app.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_ANVIL);
 }
 
-std::wstring UIScene_AnvilMenu::getMoviePath() {
+std::string UIScene_AnvilMenu::getMoviePath() {
     if (app.GetLocalPlayerCount() > 1) {
-        return L"AnvilMenuSplit";
+        return "AnvilMenuSplit";
     } else {
-        return L"AnvilMenu";
+        return "AnvilMenu";
     }
 }
 
@@ -316,40 +316,38 @@ UIControl* UIScene_AnvilMenu::getSection(ESceneSection eSection) {
 
 void UIScene_AnvilMenu::handleEditNamePressed() {
     setIgnoreInput(true);
-    InputManager.RequestKeyboard(
+    PlatformInput.RequestKeyboard(
         app.GetString(IDS_TITLE_RENAME), m_textInputAnvil.getLabel(), m_iPad, 30,
         [this](bool bRes) -> int {
             // 4J HEG - No reason to set value if keyboard was cancelled
             setIgnoreInput(false);
             if (bRes) {
-                std::wstring str = convStringToWstring(InputManager.GetText());
+                std::string str = PlatformInput.GetText();
                 setEditNameValue(str);
                 m_itemName = std::move(str);
                 updateItemName();
             }
             return 0;
         },
-        C_4JInput::EKeyboardMode_Default);
+        IPlatformInput::EKeyboardMode_Default);
 }
 
-void UIScene_AnvilMenu::setEditNameValue(const std::wstring& name) {
+void UIScene_AnvilMenu::setEditNameValue(const std::string& name) {
     m_textInputAnvil.setLabel(name);
 }
 
 void UIScene_AnvilMenu::setEditNameEditable(bool enabled) {}
 
-void UIScene_AnvilMenu::setCostLabel(const std::wstring& label,
+void UIScene_AnvilMenu::setCostLabel(const std::string& label,
                                      bool canAfford) {
     IggyDataValue result;
     IggyDataValue value[2];
 
-    const std::u16string convLabel = wstring_to_u16string(label);
-
-    IggyStringUTF16 stringVal;
-    stringVal.string = convLabel.c_str();
-    stringVal.length = convLabel.length();
-    value[0].type = IGGY_DATATYPE_string_UTF16;
-    value[0].string16 = stringVal;
+    IggyStringUTF8 stringVal;
+    stringVal.string = const_cast<char*>(label.c_str());
+    stringVal.length = label.length();
+    value[0].type = IGGY_DATATYPE_string_UTF8;
+    value[0].string8 = stringVal;
 
     value[1].type = IGGY_DATATYPE_boolean;
     value[1].boolval = canAfford;
